@@ -1,12 +1,10 @@
 // Script para página de conteúdo separada
 $(document).ready(function() {
-    
     // Carregar header da página de conteúdo (com botão voltar)
     initContentPage().then(function() {
         // Carregar conteúdo baseado no parâmetro da URL após header estar pronto
         carregarConteudoPorParametro();
     });
-    
 });
 
 // Função para carregar conteúdo baseado no parâmetro da URL
@@ -17,7 +15,10 @@ function carregarConteudoPorParametro() {
     
     if (palavra) {
         const nomeArquivo = normalizarPalavra(palavra);
-        console.log("Carregando conteúdo para:", palavra, "->", nomeArquivo);
+        DebugManager.log("Carregando conteúdo para:", palavra, "->", nomeArquivo);
+        
+        // Atualizar breadcrumb
+        atualizarBreadcrumb(palavra);
         
         carregarConteudo(nomeArquivo);
     } else {
@@ -26,13 +27,22 @@ function carregarConteudoPorParametro() {
     }
 }
 
+// Função para atualizar breadcrumb
+function atualizarBreadcrumb(palavra) {
+    // Capitalizar primeira letra
+    const palavraFormatada = palavra.charAt(0).toUpperCase() + palavra.slice(1);
+    
+    // Usar BreadcrumbManager para criar o breadcrumb
+    BreadcrumbManager.init('conteudo', palavraFormatada);
+}
+
 // Função para carregar conteúdo do JSON
 function carregarConteudo(nomeArquivo) {
     $("#loading").show();
     $("#conteudo-estruturado").hide();
     $("#erro-conteudo").hide();
     
-    $.getJSON(`dados/${nomeArquivo}.json`)
+    $.getJSON(`../dados/${nomeArquivo}.json`)
         .done(function(data) {
             console.log("Dados carregados:", data);
             
@@ -52,7 +62,7 @@ function carregarConteudo(nomeArquivo) {
 // Função para processar conteúdo estruturado
 function processarConteudoEstruturado(data, nomeArquivo) {
     // Definir título principal
-    $("#titulo-principal").text(data.titulo);
+    //$("#titulo-principal").text(data.titulo);
     
     // Limpar containers
     $("#boxes-conteudo").empty();
@@ -84,7 +94,7 @@ function criarBoxesConteudo(conteudos) {
         
         // Processar objetivos didáticos
         const objetivos = Array.isArray(conteudo.objetivos_didaticos) 
-            ? conteudo.objetivos_didaticos.join(' • ')
+            ? conteudo.objetivos_didaticos.join(' <br/> ')
             : conteudo.objetivos_didaticos || '';
         
         // Processar referências
@@ -93,29 +103,62 @@ function criarBoxesConteudo(conteudos) {
             : '';
         
         const boxHTML = `
-            <div class="content-box" id="${boxId}">
-                <div class="box-header" onclick="toggleBox('${boxId}')">
+            <div class="content-box" id="${boxId}" data-aos="fade-up" data-aos-delay="${index * 100}">
+                <div class="box-header" onclick="toggleBox('${boxId}')" tabindex="0" onkeypress="if(event.key==='Enter' || event.key===' ') toggleBox('${boxId}')">
                     <h3 class="box-title">${conteudo.titulo}</h3>
-                    <p class="box-objetivos">${objetivos}</p>
-                    <span class="expand-icon">▼</span>
-                </div>
-                <div class="box-content">
-                    <div class="conteudo-textual">
-                        ${conteudo.conteudo_textual}
-                    </div>
-                    ${referencias ? `
-                        <div class="referencias-section">
-                            <h4>📚 Referências para Aprofundamento</h4>
-                            <ul class="referencias-list">
-                                ${referencias}
-                            </ul>
-                        </div>
-                    ` : ''}
+                    <span class="expand-icon">⛶</span>
+                <p class="box-objetivos">${objetivos}</p>
                 </div>
             </div>
         `;
         
         $("#boxes-conteudo").append(boxHTML);
+    });
+    
+    // Atualizar AOS para os novos elementos
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
+    
+    // Aplicar layout adaptativo baseado no número de cards
+    if (typeof AdaptiveLayoutManager !== 'undefined') {
+        AdaptiveLayoutManager.applyLayout(conteudos.length);
+        
+        // Configurar listeners para os dots de progresso
+        $('.progress-dot').on('click', function() {
+            const cardIndex = parseInt($(this).data('card'));
+            AdaptiveLayoutManager.scrollToCard(cardIndex);
+        });
+        
+        // Observador de scroll para atualizar progresso
+        if (AdaptiveLayoutManager.currentLayout && AdaptiveLayoutManager.currentLayout.showProgress) {
+            setupScrollObserver();
+        }
+    }
+}
+
+// Configurar observador de scroll para atualizar progresso automaticamente
+function setupScrollObserver() {
+    const cards = $('.content-box');
+    const options = {
+        root: null,
+        rootMargin: '-50% 0px -50% 0px',
+        threshold: 0
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const cardIndex = cards.index(entry.target);
+                if (cardIndex >= 0 && typeof AdaptiveLayoutManager !== 'undefined') {
+                    AdaptiveLayoutManager.updateProgress(cardIndex);
+                }
+            }
+        });
+    }, options);
+    
+    cards.each(function() {
+        observer.observe(this);
     });
 }
 
@@ -139,20 +182,120 @@ function criarBoxesAtividades(atividades) {
     });
 }
 
-// Função para alternar expansão dos boxes
+// Função para alternar expansão dos boxes (agora fullscreen)
 function toggleBox(boxId) {
     const box = $(`#${boxId}`);
-    const content = box.find('.box-content');
     
-    if (box.hasClass('expanded')) {
-        // Fechar box
-        content.slideUp(300);
-        box.removeClass('expanded');
+    if (box.hasClass('fullscreen-mode')) {
+        // Fechar fullscreen
+        closeFullscreen(boxId);
     } else {
-        // Abrir box
-        content.slideDown(300);
-        box.addClass('expanded');
+        // Abrir fullscreen
+        openFullscreen(boxId);
     }
+}
+
+// Função para abrir box em fullscreen
+function openFullscreen(boxId) {
+    const box = $(`#${boxId}`);
+    const boxData = box.data('content-data');
+    
+    // Recuperar dados do conteúdo
+    const conteudos = window.dadosConteudo.conteudos;
+    const index = parseInt(boxId.replace('content-box-', ''));
+    const conteudo = conteudos[index];
+    
+    if (!conteudo) return;
+    
+    // Processar objetivos e referências
+    const objetivos = Array.isArray(conteudo.objetivos_didaticos) 
+        ? conteudo.objetivos_didaticos.join(' • ')
+        : conteudo.objetivos_didaticos || '';
+    
+    const referencias = Array.isArray(conteudo.referencias)
+        ? conteudo.referencias.map(ref => `<li>${ref}</li>`).join('')
+        : '';
+    
+    // Criar overlay
+    const overlay = $('<div class="fullscreen-overlay"></div>');
+    $('body').append(overlay);
+    
+    // Criar modal fullscreen
+    const fullscreenHTML = `
+        <div class="content-box-fullscreen" id="fullscreen-${boxId}">
+            <div class="fullscreen-header">
+                <button class="fullscreen-close" onclick="closeFullscreen('${boxId}')" tabindex="0">
+                    <span>✕</span> Fechar
+                </button>
+                <h1 class="fullscreen-title">${conteudo.titulo}</h1>
+                <div style="width: 80px;"></div> <!-- Spacer para centralizar título -->
+            </div>
+            <div class="fullscreen-content">
+                               
+                <div class="fullscreen-texto">
+                    ${conteudo.conteudo_textual}
+                </div>
+                
+                ${referencias ? `
+                    <div class="fullscreen-referencias">
+                        <h4>📚 Referências para Aprofundamento</h4>
+                        <ul>
+                            ${referencias}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    $('body').append(fullscreenHTML);
+    box.addClass('fullscreen-mode');
+    
+    // Prevenir scroll do body
+    $('body').css('overflow', 'hidden');
+    
+    // Adicionar listener para ESC
+    $(document).on('keydown.fullscreen', function(e) {
+        if (e.key === 'Escape') {
+            closeFullscreen(boxId);
+        }
+    });
+    
+    // Listener para click no overlay
+    $('.fullscreen-overlay').on('click', function() {
+        closeFullscreen(boxId);
+    });
+    
+    // Focar no botão fechar para acessibilidade
+    setTimeout(() => {
+        $(`#fullscreen-${boxId} .fullscreen-close`).focus();
+    }, 100);
+}
+
+// Função para fechar fullscreen
+function closeFullscreen(boxId) {
+    const box = $(`#${boxId}`);
+    
+    // Remover modal e overlay
+    $(`#fullscreen-${boxId}`).fadeOut(200, function() {
+        $(this).remove();
+    });
+    
+    $('.fullscreen-overlay').fadeOut(200, function() {
+        $(this).remove();
+    });
+    
+    // Remover classe e restaurar scroll
+    box.removeClass('fullscreen-mode');
+    $('body').css('overflow', '');
+    
+    // Remover listener ESC
+    $(document).off('keydown.fullscreen');
+    
+    // Retornar foco ao box original
+    setTimeout(() => {
+        box.find('.box-header').focus();
+    }, 250);
 }
 
 // Função para mostrar erro
@@ -178,20 +321,32 @@ function normalizarPalavra(palavra) {
 // Variáveis globais para controle (mantidas por compatibilidade)
 let atividadeAtualTrilha = null;
 
-// Função para mostrar atividades de trilha
+// Função para mostrar atividades de trilha - agora redireciona para página especializada
 function mostrarAtividadesTrilha() {
-    $("#escolha-atividades").fadeOut(300, function() {
-        criarBoxesTrilha(window.dadosConteudo.atividades_trilha);
-        $("#secao-trilha").fadeIn(300);
-    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const palavra = urlParams.get('palavra');
+    
+    if (palavra) {
+        // Redirecionar para página especializada de trilhas
+        window.location.href = `trilha.html?palavra=${encodeURIComponent(palavra)}&origem=conteudo`;
+    } else {
+        DebugManager.error("Palavra não encontrada nos parâmetros da URL");
+        mostrarErro("Erro ao carregar trilha de aprofundamento.");
+    }
 }
 
-// Função para mostrar atividades discente
+// Função para mostrar atividades discente - agora redireciona para página especializada
 function mostrarAtividadesDiscente() {
-    $("#escolha-atividades").fadeOut(300, function() {
-        criarBoxesAtividades(window.dadosConteudo.atividades_discente);
-        $("#secao-atividades").fadeIn(300);
-    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const palavra = urlParams.get('palavra');
+    
+    if (palavra) {
+        // Redirecionar para página especializada de atividades
+        window.location.href = `atividades.html?palavra=${encodeURIComponent(palavra)}&origem=conteudo&tipo=discente`;
+    } else {
+        DebugManager.error("Palavra não encontrada nos parâmetros da URL");
+        mostrarErro("Erro ao carregar atividades para sala de aula.");
+    }
 }
 
 // Função para voltar à escolha
@@ -201,55 +356,18 @@ function voltarEscolha() {
     });
 }
 
-// Função para criar boxes de trilha
-function criarBoxesTrilha(atividades) {
-     
-    $("#boxes-trilha").empty(); // Limpar antes de adicionar novas atividades
-
-    atividades.forEach((atividade, index) => {
-        const objetivos = Array.isArray(atividade.objetivos_didaticos) 
-            ? atividade.objetivos_didaticos.join(' • ')
-            : atividade.objetivos_didaticos || '';
-
-        const boxHTML = `
-            <div class="trilha-card">
-                <div class="trilha-titulo">${atividade.titulo}</div>
-                <div class="trilha-objetivos">${objetivos}</div>
-                <div class="trilha-descricao">${atividade.descricao}</div>
-                <div class="trilha-actions">
-                    <button class="btn-trilha-concluir" onclick="concluirAtividadeTrilha(${index})">
-                        Concluir e ir para trilha "${atividade.trilha_relacionada}"
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        $("#boxes-trilha").append(boxHTML);
-    });
+// Função para voltar para a nuvem de palavras (página inicial)
+function voltarParaNuvem() {
+    window.location.href = 'index.html';
 }
 
-
-// Função para concluir atividade de trilha (sem modal)
-function concluirAtividadeTrilha(index) {
-    const atividade = window.dadosConteudo.atividades_trilha[index];
-    const button = $(`#boxes-trilha .trilha-card:eq(${index}) .btn-trilha-concluir`);
-    
-    // Alterar visual do botão para indicar conclusão
-    button.text("✅ Concluindo...")
-          .prop("disabled", true)
-          .addClass("btn-concluindo");
-    
-    // Adicionar efeito visual ao box
-    const box = button.closest('.trilha-card');
-    box.addClass('trilha-concluida');
-    
-    // Mostrar mensagem e redirecionar após um breve delay
-    setTimeout(() => {
-        alert(`🎉 Atividade concluída! Redirecionando para "${atividade.trilha_relacionada}"...`);
-        
-        // Redirecionar para a trilha relacionada
-        const trilhaRelacionada = normalizarPalavra(atividade.trilha_relacionada);
-        window.location.href = `conteudo.html?palavra=${encodeURIComponent(atividade.trilha_relacionada)}`;
-    }, 500);
+// Função para normalizar o nome da palavra para usar como nome do arquivo
+function normalizarPalavra(palavra) {
+    return palavra
+        .toLowerCase() // Converte para minúsculas
+        .normalize('NFD') // Decompõe os caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, '') // Remove os acentos
+        .replace(/[^a-z0-9]/g, '') // Remove caracteres especiais e espaços
+        .trim(); // Remove espaços extras
 }
 

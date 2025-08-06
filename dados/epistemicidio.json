@@ -14,10 +14,9 @@
       ]
     },
     {
-      "titulo": "A América como laboratório do epistemicídio",
+      "titulo": "Colonização e epistemicídio",
       "objetivos_didaticos": [
-        "Analisar como o epistemicídio é constitutivo do projeto moderno-colonial.",
-        "Entender o papel das Américas como espaço de experimentação da violência epistêmica moderna."
+        "Analisar como o epistemicídio é constitutivo do projeto moderno-colonial e entender o papel das Américas como espaço de experimentação da violência epistêmica moderna."
       ],
       "conteudo_textual": "A colonização das Américas não apenas devastou territórios e populações, mas também impôs uma lógica epistêmica eurocentrada que silenciou e subalternizou os saberes locais. Quijano mostra como a colonialidade do poder opera por meio da inferiorização sistemática das epistemologias não europeias, fazendo das Américas um espaço inaugural do epistemicídio global.",
       "referencias": [
@@ -44,7 +43,8 @@
       "objetivos_didaticos": [
         "Explora o privilégio epistêmico e a recusa em nomear-se como grupo racializado"
       ],
-      "descricao": "Reflexão: Quem tem o direito de ser reconhecido como produtor legítimo de conhecimento em nossa sociedade?",
+      "descricao": ["Reflexão: Quem tem o direito de ser reconhecido como produtor legítimo de conhecimento em nossa sociedade?",
+    "Escrita: O usuário argumenta sobre a atualidade ou não do epistemicídio nas práticas escolares, científicas e midiáticas."],
       "trilha_relacionada": "Branquitude"
     },
     {
@@ -52,23 +52,8 @@
       "objetivos_didaticos": [
         "Aprofunda o eixo da modernidade e eurocentrismo como estrutura"
       ],
-      "descricao": " Reflexão: Interpretar uma citação de Quijano sobre a colonialidade do saber e relacionar com a ideia de “América” como projeto ideológico.",
-      "trilha_relacionada": "Colonialidade do Saber"
-    },
-    {
-      "titulo": "Epistemicídio ainda existe?",
-      "objetivos_didaticos": [
-        "Relaciona negação, apagamento e validação do saber branco como norma"
-      ],
-      "descricao": "Escrita: O usuário argumenta sobre a atualidade ou não do epistemicídio nas práticas escolares, científicas e midiáticas.",
-      "trilha_relacionada": "Branquitude"
-    },
-    {
-      "titulo": "Mapeando práticas epistemicidas",
-      "objetivos_didaticos": [
-        "Relação com como a estrutura do saber se organiza e se perpetua"
-      ],
-      "descricao": "Escrita: Escolher práticas atuais e associá-las a tipos de epistemicídio (silenciamento, apropriação, deslocamento)",
+      "descricao": [" Reflexão: Interpretar uma citação de Quijano sobre a colonialidade do saber e relacionar com a ideia de “América” como projeto ideológico.",
+    "Escrita: Escolher práticas atuais e associá-las a tipos de epistemicídio (silenciamento, apropriação, deslocamento)"],
       "trilha_relacionada": "Colonialidade do Saber"
     }
   ],

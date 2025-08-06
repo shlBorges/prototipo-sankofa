@@ -71,7 +71,7 @@ anychart.onDocumentReady(function () {
 
         if (palavra) {
             // Redirecionar para página de conteúdo com parâmetro
-            window.location.href = `conteudo.html?palavra=${encodeURIComponent(palavra)}`;
+            window.location.href = `conteudo.html?palavra=${encodeURIComponent(normalizarPalavra(palavra))}`;
         }
     });
 
