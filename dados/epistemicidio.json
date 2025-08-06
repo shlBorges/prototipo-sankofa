@@ -1,0 +1,85 @@
+{
+  "titulo": "Epistemicídio Negro",
+  "texto": "O epistemicídio é a eliminação sistemática dos saberes produzidos por grupos subalternizados, especialmente povos negros e indígenas.",
+  "conteudos": [
+    {
+      "titulo": "Conceito de Epistemicídio",
+      "objetivos_didaticos": [
+        "Compreender o termo 'epistemicídio' e suas implicações na deslegitimação de saberes de grupos historicamente marginalizados."
+      ],
+      "conteudo_textual": "O epistemicídio é a eliminação sistemática dos saberes produzidos por grupos subalternizados, especialmente povos negros e indígenas. É uma violência cognitiva que retira dessas populações o direito de produzir, validar e transmitir conhecimento. Sueli Carneiro demonstra como essa lógica está imbricada na estrutura do racismo, promovendo uma negação ontológica e epistêmica do outro.",
+      "referencias": [
+        "CARNEIRO, Sueli. A construção do outro como não-ser como fundamento do ser. Tese (Doutorado em Educação), USP, 2005.",
+        "SANTOS, Boaventura de Sousa. Para além do pensamento abissal: das linhas globais a uma ecologia de saberes. In: Epistemologias do Sul. São Paulo: Cortez, 2010."
+      ]
+    },
+    {
+      "titulo": "A América como laboratório do epistemicídio",
+      "objetivos_didaticos": [
+        "Analisar como o epistemicídio é constitutivo do projeto moderno-colonial.",
+        "Entender o papel das Américas como espaço de experimentação da violência epistêmica moderna."
+      ],
+      "conteudo_textual": "A colonização das Américas não apenas devastou territórios e populações, mas também impôs uma lógica epistêmica eurocentrada que silenciou e subalternizou os saberes locais. Quijano mostra como a colonialidade do poder opera por meio da inferiorização sistemática das epistemologias não europeias, fazendo das Américas um espaço inaugural do epistemicídio global.",
+      "referencias": [
+        "QUIJANO, Aníbal. Colonialidade do poder, eurocentrismo e América Latina. In: Lander, Edgardo (org.). A colonialidade do saber: eurocentrismo e ciências sociais. Perspectivas latino-americanas. CLACSO, 2005.",
+        "SANTOS, Boaventura de Sousa. Para além do pensamento abissal: das linhas globais a uma ecologia de saberes. In: Epistemologias do Sul. São Paulo: Cortez, 2010."
+      ]
+    },
+    {
+      "titulo": "Práticas Epistemicidas",
+      "objetivos_didaticos": [
+        "Identificar práticas históricas e contemporâneas que expressam o epistemicídio.",
+        "Refletir sobre os impactos dessas práticas na educação, na ciência e na cultura."
+      ],
+      "conteudo_textual": "As práticas epistemicidas incluem a imposição de línguas coloniais, a marginalização de saberes tradicionais em currículos, a invisibilização da produção intelectual negra e a desqualificação de epistemologias não ocidentais. Conforme Santos e Carneiro, essas práticas sustentam a monocultura do saber científico e reforçam o racismo epistêmico na academia e nas instituições.",
+      "referencias": [
+        "CARNEIRO, Sueli. A construção do outro como não-ser como fundamento do ser. Tese (Doutorado em Educação), USP, 2005.",
+        "SANTOS, Boaventura de Sousa. Para além do pensamento abissal: das linhas globais a uma ecologia de saberes. In: Epistemologias do Sul. São Paulo: Cortez, 2010."
+      ]
+    }
+  ],
+  "atividades_trilha": [
+    {
+      "titulo": "Quem pode saber?",
+      "objetivos_didaticos": [
+        "Explora o privilégio epistêmico e a recusa em nomear-se como grupo racializado"
+      ],
+      "descricao": "Reflexão: Quem tem o direito de ser reconhecido como produtor legítimo de conhecimento em nossa sociedade?",
+      "trilha_relacionada": "Branquitude"
+    },
+    {
+      "titulo": "Análise Crítica de Citação",
+      "objetivos_didaticos": [
+        "Aprofunda o eixo da modernidade e eurocentrismo como estrutura"
+      ],
+      "descricao": " Reflexão: Interpretar uma citação de Quijano sobre a colonialidade do saber e relacionar com a ideia de “América” como projeto ideológico.",
+      "trilha_relacionada": "Colonialidade do Saber"
+    },
+    {
+      "titulo": "Epistemicídio ainda existe?",
+      "objetivos_didaticos": [
+        "Relaciona negação, apagamento e validação do saber branco como norma"
+      ],
+      "descricao": "Escrita: O usuário argumenta sobre a atualidade ou não do epistemicídio nas práticas escolares, científicas e midiáticas.",
+      "trilha_relacionada": "Branquitude"
+    },
+    {
+      "titulo": "Mapeando práticas epistemicidas",
+      "objetivos_didaticos": [
+        "Relação com como a estrutura do saber se organiza e se perpetua"
+      ],
+      "descricao": "Escrita: Escolher práticas atuais e associá-las a tipos de epistemicídio (silenciamento, apropriação, deslocamento)",
+      "trilha_relacionada": "Colonialidade do Saber"
+    }
+  ],
+  "atividades_discente": [
+    {
+      "tipo": "reflexiva",
+      "descricao": "Analise uma situação vivida ou observada em que o saber de uma comunidade negra ou indígena foi deslegitimado. Como essa deslegitimação ocorreu? Quais seriam possíveis estratégias de valorização desses saberes?"
+    },
+    {
+      "tipo": "criativa",
+      "descricao": "Crie um material de divulgação (texto, imagem ou áudio) que denuncie uma prática epistemicida atual e apresente uma proposta de reexistência baseada em saberes negros ou indígenas."
+    }
+  ]
+}

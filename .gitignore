@@ -1,0 +1,35 @@
+# Arquivos do Node.js (não necessários para GitHub Pages)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Arquivos do servidor (GitHub Pages não executa backend)
+server.js
+package.json
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de editor
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+
+# Dependências de runtime
+.npm
+.yarn-integrity
+
+# Arquivos de cache
+.cache/
+
+# Arquivos temporários
+*.tmp
+*.temp

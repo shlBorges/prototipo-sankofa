@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Apresentação -->
+    <title>SANKOFA - Conteúdo</title>
+    <link rel="shortcut icon" href="img/icoNumeEtiqueta.ico" type="image/x-icon">
+
+    <!-- Front-End -->
+    <link rel="stylesheet" href="style/style.css" type="text/css" media="screen">
+    <link href="https://fonts.googleapis.com/css?family=Anton" rel="stylesheet">
+</head>
+<body>
+    <!-- Header será carregado dinamicamente -->
+
+    <main id="conteudo-principal">
+        <!-- Loading inicial -->
+        <div id="loading">
+            <p>Carregando conteúdo...</p>
+        </div>
+        
+        <!-- Container para o conteúdo estruturado -->
+        <section id="conteudo-estruturado" style="display: none;">
+            <h1 id="titulo-principal"></h1>
+            
+            <!-- Container para os boxes de conteúdo -->
+            <div id="boxes-conteudo" class="conteudo-grid">
+                <!-- Os boxes serão gerados dinamicamente -->
+            </div>
+            
+            <!-- Seção de escolha de atividades -->
+            <section id="escolha-atividades" style="display: none;">
+                <div class="escolha-container">
+                    <h2>🎯 Continue sua Jornada de Aprendizagem</h2>
+                    <p class="escolha-subtitulo">Como você gostaria de aplicar o conhecimento adquirido?</p>
+                    
+                    <div class="opcoes-atividades">
+                        <div class="opcao-card" onclick="mostrarAtividadesTrilha()">
+                            <div class="opcao-icon">🗺️</div>
+                            <h3>Trilha de Aprofundamento</h3>
+                            <p>Atividades interativas que conectam conceitos e levam você para novos temas relacionados</p>
+                            <span class="opcao-badge">Exploração Guiada</span>
+                        </div>
+                        
+                        <div class="opcao-card" onclick="mostrarAtividadesDiscente()">
+                            <div class="opcao-icon">👥</div>
+                            <h3>Atividades para Sala de Aula</h3>
+                            <p>Propostas práticas para discussão, reflexão e aplicação em contexto educacional</p>
+                            <span class="opcao-badge">Aplicação Prática</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Seção de atividades trilha -->
+            <section id="secao-trilha" style="display: none;">
+                <div class="trilha-header">
+                    <button class="btn-voltar" onclick="voltarEscolha()">← Voltar</button>
+                    <h2>Trilha de Aprofundamento</h2>
+                    <p>Escolha uma atividade para aprofundar seus conhecimentos</p>
+                </div>
+                <div id="boxes-trilha" class="trilha-grid">
+                    <!-- As atividades de trilha serão geradas dinamicamente -->
+                </div>
+            </section>
+            
+            <!-- Seção de atividades discente -->
+            <section id="secao-atividades" style="display: none;">
+                <div class="atividades-header">
+                    <button class="btn-voltar" onclick="voltarEscolha()">← Voltar</button>
+                    <h2>Atividades para Sala de Aula</h2>
+                    <p>Aplique seus novos conhecimentos com os estudantes</p>
+                </div>
+                <div id="boxes-atividades" class="atividades-grid">
+                    <!-- As atividades serão geradas dinamicamente -->
+                </div>
+            </section>
+            
+
+        </section>
+
+        <!-- Mensagem de erro -->
+        <div id="erro-conteudo" style="display: none;">
+            <p>Erro ao carregar conteúdo.</p>
+            <p>Tente novamente ou volte à nuvem de palavras.</p>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/conteudo.js"></script>
+</body>
+</html>
