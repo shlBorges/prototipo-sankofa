@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sankofa D3.js WordCloud - Avançado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8B4513, #B8860B);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .controls-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .controls button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .controls button.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .control-slider {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            height: 6px;
+            width: 100px;
+            outline: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .wordcloud-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #wordcloud-svg {
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .word-text {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .word-text:hover {
+            filter: brightness(1.3) drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .word-text.highlighted {
+            filter: brightness(1.5) drop-shadow(0 0 10px currentColor);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(139, 69, 19, 0.8));
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            max-width: 350px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+
+        .tooltip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tooltip h4 {
+            margin: 0;
+            color: #B8860B;
+            font-size: 18px;
+        }
+
+        .tooltip-size {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8B4513;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes wordEntrance {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2) rotate(90deg);
+            }
+            100% {
+                opacity: 0.9;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes wordPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .word-animate-entrance {
+            animation: wordEntrance 1.2s ease-out forwards;
+        }
+
+        .word-animate-pulse {
+            animation: wordPulse 2s ease-in-out infinite;
+        }
+
+        .analytics-panel {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .analytics-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .wordcloud-container {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            .controls-row {
+                gap: 10px;
+            }
+
+            .controls button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌍 SANKOFA - D3.js WordCloud Avançado</h1>
+        <p>Animações, Interatividade e Analytics Decoloniais</p>
+    </div>
+
+    <div class="controls-panel">
+        <div class="controls-row">
+            <button onclick="loadAndGenerate()" class="active" id="load-btn">🔄 Carregar & Gerar</button>
+            <button onclick="animateEntranceWords()">✨ Animação Entrada</button>
+            <button onclick="animatePulseWords()">💓 Pulsar Palavras</button>
+            <button onclick="highlightBySize()">📏 Destacar por Tamanho</button>
+            <button onclick="showWordPaths()">🌐 Mostrar Caminhos</button>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="animateElastic()">🎪 Elástica</button>
+            <button onclick="animateBounce()">🏀 Saltitante</button>
+            <button onclick="animateWave()">🌊 Onda</button>
+            <button onclick="animateSpiral()">🌀 Espiral</button>
+            <button onclick="animateRainbow()">🌈 Arco-íris</button>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="animateExplosion()">💥 Explosão</button>
+            <button onclick="animateTyping()">⌨️ Digitando</button>
+            <button onclick="animateRotate360()">🔄 Rotação 360°</button>
+            <button onclick="animateFlicker()">✨ Cintilante</button>
+            <button onclick="animateGravity()">🍂 Gravidade</button>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="animateFontGrowth()">📈 Crescimento</button>
+            <button onclick="animateFontMorph()">🔀 Metamorfose</button>
+            <button onclick="animateWeightCycle()">💪 Peso Cíclico</button>
+            <button onclick="animateFontShake()">🌀 Tremer Fonte</button>
+            <button onclick="animateRandomFonts()">🎲 Fontes Aleatórias</button>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="animateMatrix3D()">🎭 Matrix 3D</button>
+            <button onclick="animateSkewTransform()">📐 Inclinação</button>
+            <button onclick="animatePerspective()">🔍 Perspectiva</button>
+            <button onclick="animateClipPath()">✂️ Recorte</button>
+            <button onclick="animateMorphPath()">🔄 Morphing</button>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="animatePhysics()">⚡ Física</button>
+            <button onclick="animateParticles()">✨ Partículas</button>
+            <button onclick="animateFluid()">🌊 Fluido</button>
+            <button onclick="animateMagnetic()">🧲 Magnético</button>
+            <button onclick="animateQuantum()">⚛️ Quântico</button>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Esquema de Cores:</label>
+                <button onclick="setColorScheme('sankofa')" id="color-sankofa">🌍 Sankofa</button>
+                <button onclick="setColorScheme('afrocentrica')" id="color-afro">🔥 Afrocêntrica</button>
+                <button onclick="setColorScheme('natureza')" id="color-natura">🌿 Natureza</button>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Fonte:</label>
+                <button onclick="setFont('Arial')" id="font-arial">Arial</button>
+                <button onclick="setFont('Times')" id="font-times">Times</button>
+                <button onclick="setFont('Courier')" id="font-courier">Courier</button>
+                <button onclick="setFont('Impact')" id="font-impact">Impact</button>
+                <button onclick="setFont('Georgia')" id="font-georgia">Georgia</button>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Rotação:</label>
+                <input type="range" class="control-slider" id="rotation-range" 
+                       min="0" max="90" value="30" 
+                       oninput="updateRotation(this.value)">
+                <span id="rotation-value">30°</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Espaçamento:</label>
+                <input type="range" class="control-slider" id="padding-range" 
+                       min="1" max="20" value="5" 
+                       oninput="updatePadding(this.value)">
+                <span id="padding-value">5px</span>
+            </div>
+
+            <div class="control-group">
+                <label>Velocidade:</label>
+                <input type="range" class="control-slider" id="speed-range" 
+                       min="100" max="2000" value="1000" 
+                       oninput="updateAnimationSpeed(this.value)">
+                <span id="speed-value">1000ms</span>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Escala Fonte:</label>
+                <input type="range" class="control-slider" id="font-scale-range" 
+                       min="0.5" max="1.5" step="0.1" value="0.8" 
+                       oninput="updateFontScale(this.value)">
+                <span id="font-scale-value">0.8x</span>
+            </div>
+
+            <div class="control-group">
+                <label>Peso:</label>
+                <button onclick="setFontWeight('normal')" id="weight-normal">Normal</button>
+                <button onclick="setFontWeight('bold')" id="weight-bold">Negrito</button>
+                <button onclick="setFontWeight('900')" id="weight-black">Extra</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="wordcloud-container">
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-spinner"></div>
+        </div>
+        <svg id="wordcloud-svg" width="800" height="600"></svg>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip">
+        <div class="tooltip-header">
+            <h4></h4>
+            <span class="tooltip-size"></span>
+        </div>
+        <p></p>
+        <small style="opacity: 0.8;"></small>
+    </div>
+
+    <div class="analytics-panel" id="analytics">
+        <div class="analytics-row">
+            <span>📊 Palavras Carregadas:</span>
+            <span id="word-count">0</span>
+        </div>
+        <div class="analytics-row">
+            <span>🎯 Interações Totais:</span>
+            <span id="interaction-count">0</span>
+        </div>
+        <div class="analytics-row">
+            <span>⏱️ Tempo de Sessão:</span>
+            <span id="session-time">0s</span>
+        </div>
+        <div class="analytics-row">
+            <span>🌟 Palavra Mais Clicada:</span>
+            <span id="most-clicked">-</span>
+        </div>
+    </div>
+
+    <!-- D3.js v7 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- D3-Cloud -->
+    <script src="https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud/build/d3.layout.cloud.js"></script>
+    
+    <script>
+        console.log('🌍 Sankofa D3.js WordCloud Avançado iniciando...');
+
+        // Estado global
+        let sankofaData = null;
+        let currentColorScheme = 'sankofa';
+        let currentFont = 'Arial';
+        let currentFontWeight = 'bold';
+        let fontScale = 0.8;
+        let svg = null;
+        let tooltip = null;
+        let wordsGroup = null;
+        let sessionStartTime = Date.now();
+        
+        // Configurações
+        let config = {
+            width: 800,
+            height: 600,
+            padding: 5,
+            rotationRange: 30,
+            animationSpeed: 1000
+        };
+
+        // Analytics
+        let analytics = {
+            totalInteractions: 0,
+            wordClicks: new Map(),
+            sessionTime: 0
+        };
+
+        // Esquemas de cores expandidos
+        const colorSchemes = {
+            sankofa: {
+                'Epistemicídio': '#8B4513',
+                'Colonialidade do Saber': '#DC143C',
+                'Branquitude': '#B22222',
+                'Tecnologia e Poder': '#228B22',
+                'Racismo Algorítmico': '#DC143C',
+                'Inteligência Artificial': '#4169E1',
+                'Saberes Negros': '#32CD32',
+                'Reexistência': '#FF8C00',
+                'EPT': '#9932CC',
+                'Decolonialidade': '#228B22',
+                'Ubuntu': '#FF8C00',
+                'Ancestralidade': '#DAA520'
+            },
+            afrocentrica: {
+                'Epistemicídio': '#8B0000',
+                'Colonialidade do Saber': '#B22222',
+                'Branquitude': '#DC143C',
+                'Tecnologia e Poder': '#006400',
+                'Racismo Algorítmico': '#B22222',
+                'Inteligência Artificial': '#4682B4',
+                'Saberes Negros': '#228B22',
+                'Reexistência': '#FF6347',
+                'EPT': '#8A2BE2',
+                'Decolonialidade': '#006400',
+                'Ubuntu': '#FF6347',
+                'Ancestralidade': '#DAA520'
+            },
+            natureza: {
+                'Epistemicídio': '#654321',
+                'Colonialidade do Saber': '#8B4513',
+                'Branquitude': '#A0522D',
+                'Tecnologia e Poder': '#32CD32',
+                'Racismo Algorítmico': '#8B4513',
+                'Inteligência Artificial': '#1E90FF',
+                'Saberes Negros': '#228B22',
+                'Reexistência': '#FF8C00',
+                'EPT': '#9370DB',
+                'Decolonialidade': '#32CD32',
+                'Ubuntu': '#FF8C00',
+                'Ancestralidade': '#CD853F'
+            }
+        };
+
+        // Inicialização
+        function init() {
+            console.log('📋 Inicializando componentes...');
+            
+            // Verificar se D3.js está disponível
+            if (typeof d3 === 'undefined') {
+                console.error('❌ D3.js não foi carregado!');
+                return false;
+            }
+            
+            // Configurar SVG com verificação de segurança
+            const svgElement = d3.select('#wordcloud-svg');
+            if (svgElement.empty()) {
+                console.error('❌ Elemento SVG não encontrado!');
+                return false;
+            }
+            
+            svg = svgElement
+                .attr('viewBox', `0 0 ${config.width} ${config.height}`)
+                .attr('preserveAspectRatio', 'xMidYMid meet');
+
+            // Grupo principal para palavras
+            wordsGroup = svg.append('g')
+                .attr('transform', `translate(${config.width/2},${config.height/2})`);
+
+            // Configurar tooltip com verificação
+            const tooltipElement = d3.select('#tooltip');
+            if (tooltipElement.empty()) {
+                console.error('❌ Elemento tooltip não encontrado!');
+                return false;
+            }
+            tooltip = tooltipElement;
+
+            // Marcar esquema ativo
+            setActiveColorButton('sankofa');
+
+            // Iniciar analytics
+            updateAnalytics();
+            setInterval(updateAnalytics, 1000);
+
+            console.log('✅ Componentes inicializados');
+            return true;
+        }
+
+        // Loading overlay
+        function showLoading() {
+            d3.select('#loading-overlay').classed('show', true);
+        }
+
+        function hideLoading() {
+            d3.select('#loading-overlay').classed('show', false);
+        }
+
+        // Carregar dados JSON
+        async function loadWordsFromJSON() {
+            try {
+                showLoading();
+                console.log('📂 Carregando dados do JSON...');
+                
+                const response = await fetch('./exemplo-palavras.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                sankofaData = data;
+                
+                console.log('✅ Dados carregados:', data.palavras.length, 'palavras');
+                return data;
+                
+            } catch (error) {
+                console.warn('⚠️ Usando dados de fallback:', error.message);
+                
+                sankofaData = {
+                    "palavras": [
+                        { "text": "Epistemicídio", "size": 44, "description": "Eliminação sistemática dos saberes de grupos subalternizados", "trail": "Epistemicídio Negro" },
+                        { "text": "Decolonialidade", "size": 37, "description": "Processo de libertação das estruturas coloniais de poder", "trail": "Decolonialidade" },
+                        { "text": "Ubuntu", "size": 31, "description": "Filosofia africana que enfatiza a interconexão humana", "trail": "Ubuntu" },
+                        { "text": "Saberes Negros", "size": 39, "description": "Conhecimentos e epistemologias da população negra", "trail": "Saberes Negros" },
+                        { "text": "Ancestralidade", "size": 30, "description": "Conexão e reverência aos saberes ancestrais", "trail": "Ancestralidade" }
+                    ]
+                };
+                return sankofaData;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Obter cor da palavra
+        function getWordColor(word) {
+            const scheme = colorSchemes[currentColorScheme];
+            return scheme[word] || '#8B4513';
+        }
+
+        // Gerar layout da nuvem
+        function generateWordCloud() {
+            if (!sankofaData?.palavras) {
+                console.error('❌ Nenhum dado disponível');
+                return;
+            }
+
+            showLoading();
+            console.log('🔄 Gerando layout da nuvem...');
+
+            const words = sankofaData.palavras.map(palavra => ({
+                text: palavra.text,
+                size: palavra.size,
+                description: palavra.description,
+                trail: palavra.trail,
+                originalSize: palavra.size
+            }));
+
+            const layout = d3.layout.cloud()
+                .size([config.width, config.height])
+                .words(words)
+                .padding(config.padding)
+                .rotate(() => (Math.random() - 0.5) * (config.rotationRange * 2))
+                .font(currentFont)
+                .fontWeight(currentFontWeight)
+                .fontSize(d => Math.max(12, d.size * fontScale))
+                .on('end', renderWords);
+
+            layout.start();
+        }
+
+        // Renderizar palavras
+        function renderWords(words) {
+            console.log('🎨 Renderizando', words.length, 'palavras');
+            
+            // Verificar se wordsGroup está disponível
+            if (!wordsGroup) {
+                console.error('❌ Grupo de palavras não foi inicializado!');
+                hideLoading();
+                return;
+            }
+            
+            // Limpar grupo anterior
+            wordsGroup.selectAll('*').remove();
+
+            // Criar elementos de texto
+            const textElements = wordsGroup.selectAll('text')
+                .data(words)
+                .enter().append('text')
+                .style('font-size', d => `${d.size}px`)
+                .style('font-family', currentFont)
+                .style('font-weight', currentFontWeight)
+                .style('fill', d => getWordColor(d.text))
+                .attr('class', 'word-text')
+                .attr('text-anchor', 'middle')
+                .attr('transform', d => {
+                    // Armazenar a posição original nos dados
+                    d.finalX = d.x || 0;
+                    d.finalY = d.y || 0;
+                    d.finalRotate = d.rotate || 0;
+                    return `translate(${d.finalX},${d.finalY})rotate(${d.finalRotate})`;
+                })
+                .text(d => d.text)
+                .style('opacity', 0)
+                .style('cursor', 'pointer');
+
+            // Animação de entrada padrão
+            textElements
+                .transition()
+                .duration(config.animationSpeed)
+                .delay((d, i) => i * 150)
+                .style('opacity', 0.9)
+                .ease(d3.easeBackOut);
+
+            // Eventos
+            setupWordEvents(textElements);
+
+            hideLoading();
+            console.log('✅ Nuvem renderizada');
+        }
+
+        // Configurar eventos das palavras
+        function setupWordEvents(selection) {
+            selection
+                .on('mouseover', handleMouseOver)
+                .on('mouseout', handleMouseOut)
+                .on('click', handleClick);
+        }
+
+        // Eventos de interação
+        function handleMouseOver(event, d) {
+            analytics.totalInteractions++;
+            
+            // Usar transform SVG mantendo posição original
+            const baseX = d.finalX || d.x || 0;
+            const baseY = d.finalY || d.y || 0;
+            const baseRotate = d.finalRotate || d.rotate || 0;
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1)
+                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1.1)`)
+                .style('filter', 'brightness(1.3) drop-shadow(2px 2px 4px rgba(0,0,0,0.3))');
+
+            showTooltip(d, event);
+        }
+
+        function handleMouseOut(event, d) {
+            // Restaurar transform original
+            const baseX = d.finalX || d.x || 0;
+            const baseY = d.finalY || d.y || 0;
+            const baseRotate = d.finalRotate || d.rotate || 0;
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.9)
+                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                .style('filter', 'brightness(1)');
+
+            hideTooltip();
+        }
+
+        function handleClick(event, d) {
+            analytics.totalInteractions++;
+            
+            // Atualizar contador de cliques
+            const currentClicks = analytics.wordClicks.get(d.text) || 0;
+            analytics.wordClicks.set(d.text, currentClicks + 1);
+
+            console.log('🎯 Clique em:', d.text);
+            
+            // Animação de feedback mantendo posição
+            const baseX = d.finalX || d.x || 0;
+            const baseY = d.finalY || d.y || 0;
+            const baseRotate = d.finalRotate || d.rotate || 0;
+            
+            d3.select(this)
+                .transition()
+                .duration(150)
+                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1.3)`)
+                .transition()
+                .duration(150)
+                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                .on('end', () => {
+                    // Simular navegação
+                    showTrailNavigation(d);
+                });
+        }
+
+        // Tooltip avançado
+        function showTooltip(data, event) {
+            tooltip.select('h4').text(data.text);
+            tooltip.select('.tooltip-size').text(`Tamanho: ${data.originalSize}`);
+            tooltip.select('p').text(data.description);
+            tooltip.select('small').text(`🛤️ Trilha: ${data.trail}`);
+
+            const x = event.pageX + 15;
+            const y = event.pageY - 10;
+
+            tooltip
+                .style('left', x + 'px')
+                .style('top', y + 'px')
+                .classed('show', true);
+        }
+
+        function hideTooltip() {
+            tooltip.classed('show', false);
+        }
+
+        // Navegação de trilha simulada
+        function showTrailNavigation(data) {
+            const message = `
+🌍 SANKOFA - Navegação Decolonial
+
+📚 Conceito: ${data.text}
+📖 Descrição: ${data.description}
+🛤️ Trilha: ${data.trail}
+
+🎯 Cliques neste conceito: ${analytics.wordClicks.get(data.text)}
+📊 Total de interações: ${analytics.totalInteractions}
+
+Em uma implementação real, isso redirecionaria para a trilha educacional correspondente.
+            `;
+            alert(message);
+        }
+
+        // Controles avançados
+        function loadAndGenerate() {
+            loadWordsFromJSON().then(generateWordCloud);
+        }
+
+        function animateEntranceWords() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .style('opacity', 0)
+                .attr('transform', `translate(0,0)rotate(0)`) // Começar no centro
+                .transition()
+                .duration(config.animationSpeed * 1.5)
+                .delay((d, i) => i * 200)
+                .attr('transform', d => `translate(${d.finalX || d.x || 0},${d.finalY || d.y || 0})rotate(${d.finalRotate || d.rotate || 0})`) // Mover para posição final
+                .style('opacity', 0.9)
+                .ease(d3.easeBackOut);
+        }
+
+        function animatePulseWords() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Aplicar animação de pulse mantendo posição
+                    element
+                        .transition()
+                        .duration(1000)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1.1)`)
+                        .transition()
+                        .duration(1000)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .transition()
+                        .duration(1000)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1.1)`)
+                        .transition()
+                        .duration(1000)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function highlightBySize() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .transition()
+                .duration(800)
+                .style('fill', function(d) {
+                    if (d.originalSize > 35) return '#FF6B35'; // Grandes - laranja
+                    if (d.originalSize > 30) return '#F7931E'; // Médias - amarelo
+                    return '#4CAF50'; // Pequenas - verde
+                })
+                .style('filter', 'drop-shadow(0 0 8px currentColor)')
+                .attr('transform', function(d) {
+                    // Usar posições salvas e adicionar escala
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const scale = d.originalSize > 35 ? 1.15 : d.originalSize > 30 ? 1.1 : 1.05;
+                    return `translate(${baseX},${baseY})rotate(${baseRotate})scale(${scale})`;
+                });
+
+            // Restaurar cores e posições originais após 3 segundos
+            setTimeout(() => {
+                svg.selectAll('.word-text')
+                    .transition()
+                    .duration(800)
+                    .style('fill', d => getWordColor(d.text))
+                    .style('filter', 'none')
+                    .attr('transform', d => `translate(${d.finalX || d.x || 0},${d.finalY || d.y || 0})rotate(${d.finalRotate || d.rotate || 0})`);
+            }, 3000);
+        }
+
+        function showWordPaths() {
+            if (!svg || svg.empty() || !wordsGroup) {
+                console.error('❌ SVG ou grupo de palavras não inicializados!');
+                return;
+            }
+            
+            const words = svg.selectAll('.word-text');
+            
+            words.each(function(d, i) {
+                const element = d3.select(this);
+                const bbox = this.getBBox();
+                
+                // Criar path circular ao redor da palavra
+                const circle = wordsGroup.append('circle')
+                    .attr('cx', d.x || 0)
+                    .attr('cy', d.y || 0)
+                    .attr('r', 5)
+                    .style('fill', 'none')
+                    .style('stroke', getWordColor(d.text))
+                    .style('stroke-width', 2)
+                    .style('opacity', 0);
+
+                circle.transition()
+                    .duration(1000)
+                    .delay(i * 100)
+                    .attr('r', Math.max(bbox.width, bbox.height) / 2 + 10)
+                    .style('opacity', 0.7)
+                    .transition()
+                    .duration(1000)
+                    .style('opacity', 0)
+                    .remove();
+            });
+        }
+
+        // ========== NOVAS ANIMAÇÕES D3.js ==========
+
+        function animateElastic() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Animação elástica com D3.js
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 1.5)
+                        .delay(i * 100)
+                        .ease(d3.easeElastic.amplitude(1).period(0.3))
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1.4)`)
+                        .transition()
+                        .duration(config.animationSpeed)
+                        .ease(d3.easeElastic.amplitude(1).period(0.2))
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateBounce() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Movimento saltitante
+                    element
+                        .transition()
+                        .duration(config.animationSpeed)
+                        .delay(i * 80)
+                        .ease(d3.easeBounce)
+                        .attr('transform', `translate(${baseX},${baseY - 30})rotate(${baseRotate})scale(1.2)`)
+                        .transition()
+                        .duration(config.animationSpeed)
+                        .ease(d3.easeBounce)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateWave() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Movimento de onda senoidal
+                    const waveHeight = 20;
+                    const waveFreq = 0.1;
+                    
+                    function waveMotion(t) {
+                        const offsetY = Math.sin((Date.now() * waveFreq + i * 50) / 100) * waveHeight;
+                        return `translate(${baseX},${baseY + offsetY})rotate(${baseRotate + Math.sin(t) * 5})scale(${1 + Math.sin(t * 2) * 0.1})`;
+                    }
+                    
+                    // Animar por 4 segundos
+                    element
+                        .transition()
+                        .duration(4000)
+                        .ease(d3.easeSin)
+                        .tween('wave', function() {
+                            return function(t) {
+                                element.attr('transform', waveMotion(t * Math.PI * 4));
+                            };
+                        })
+                        .transition()
+                        .duration(500)
+                        .ease(d3.easeBack)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateSpiral() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Movimento espiral
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 150)
+                        .ease(d3.easeCircle)
+                        .tween('spiral', function() {
+                            return function(t) {
+                                const angle = t * Math.PI * 4; // 2 voltas
+                                const radius = (1 - t) * 50; // Espiral para dentro
+                                const spiralX = baseX + Math.cos(angle) * radius;
+                                const spiralY = baseY + Math.sin(angle) * radius;
+                                const rotation = baseRotate + (t * 720); // 2 rotações
+                                const scale = 0.5 + t * 0.5;
+                                
+                                element.attr('transform', `translate(${spiralX},${spiralY})rotate(${rotation})scale(${scale})`);
+                            };
+                        });
+                });
+        }
+
+        function animateRainbow() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            // Cores do arco-íris
+            const rainbowColors = ['#FF0000', '#FF8000', '#FFFF00', '#80FF00', '#00FF00', '#00FF80', '#00FFFF', '#0080FF', '#0000FF', '#8000FF', '#FF00FF', '#FF0080'];
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Ciclo de cores e movimento
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 3)
+                        .delay(i * 100)
+                        .ease(d3.easeExp)
+                        .tween('rainbow', function() {
+                            return function(t) {
+                                // Interpolar cores
+                                const colorIndex = (t * (rainbowColors.length - 1)) % rainbowColors.length;
+                                const currentColor = rainbowColors[Math.floor(colorIndex)];
+                                
+                                // Movimento circular suave
+                                const circleRadius = 10;
+                                const angle = t * Math.PI * 2;
+                                const newX = baseX + Math.cos(angle) * circleRadius * Math.sin(t * Math.PI);
+                                const newY = baseY + Math.sin(angle) * circleRadius * Math.sin(t * Math.PI);
+                                
+                                element
+                                    .style('fill', currentColor)
+                                    .style('filter', `drop-shadow(0 0 8px ${currentColor})`)
+                                    .attr('transform', `translate(${newX},${newY})rotate(${baseRotate + t * 180})scale(${1 + Math.sin(t * Math.PI) * 0.3})`);
+                            };
+                        })
+                        .transition()
+                        .duration(1000)
+                        .ease(d3.easeBack)
+                        .style('fill', d => getWordColor(d.text))
+                        .style('filter', 'none')
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateExplosion() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Direção aleatória para explosão
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 150 + Math.random() * 100;
+                    const explodeX = baseX + Math.cos(angle) * distance;
+                    const explodeY = baseY + Math.sin(angle) * distance;
+                    
+                    // Animação de explosão
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 0.8)
+                        .delay(i * 50)
+                        .ease(d3.easeQuadOut)
+                        .attr('transform', `translate(${explodeX},${explodeY})rotate(${baseRotate + Math.random() * 720})scale(0.3)`)
+                        .style('opacity', 0.3)
+                        .transition()
+                        .duration(config.animationSpeed * 1.2)
+                        .ease(d3.easeBackInOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9);
+                });
+        }
+
+        function animateTyping() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const originalText = d.text;
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Efeito de digitação
+                    element
+                        .text('')
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 200)
+                        .ease(d3.easeLinear)
+                        .tween('typing', function() {
+                            return function(t) {
+                                const currentLength = Math.floor(t * originalText.length);
+                                const displayText = originalText.substring(0, currentLength);
+                                element.text(displayText + (t < 1 && Math.floor(t * 10) % 2 ? '|' : ''));
+                                
+                                // Pequena vibração durante digitação
+                                const shake = Math.sin(t * 50) * 2;
+                                element.attr('transform', `translate(${baseX + shake},${baseY})rotate(${baseRotate})scale(1)`);
+                            };
+                        })
+                        .on('end', function() {
+                            element.text(originalText);
+                        });
+                });
+        }
+
+        function animateRotate360() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Rotação 360° com diferentes velocidades
+                    const rotations = 2 + Math.random() * 2; // 2-4 voltas
+                    const direction = Math.random() > 0.5 ? 1 : -1; // Horário ou anti-horário
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 100)
+                        .ease(d3.easeCubicInOut)
+                        .tween('rotate360', function() {
+                            return function(t) {
+                                const currentRotation = baseRotate + (t * 360 * rotations * direction);
+                                const scale = 1 + Math.sin(t * Math.PI * 2) * 0.2; // Pulsação durante rotação
+                                element.attr('transform', `translate(${baseX},${baseY})rotate(${currentRotation})scale(${scale})`);
+                            };
+                        })
+                        .transition()
+                        .duration(500)
+                        .ease(d3.easeBack)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateFlicker() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const originalColor = getWordColor(d.text);
+                    
+                    // Efeito cintilante com múltiplas cores
+                    const flickerColors = ['#FFD700', '#FF6B35', '#00FFFF', '#FF1493', originalColor];
+                    
+                    function flicker(iterations) {
+                        if (iterations <= 0) {
+                            element
+                                .transition()
+                                .duration(300)
+                                .style('fill', originalColor)
+                                .style('filter', 'none')
+                                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                            return;
+                        }
+                        
+                        const randomColor = flickerColors[Math.floor(Math.random() * flickerColors.length)];
+                        const randomScale = 0.8 + Math.random() * 0.4;
+                        const randomOpacity = 0.3 + Math.random() * 0.7;
+                        
+                        element
+                            .transition()
+                            .duration(100 + Math.random() * 200)
+                            .ease(d3.easeLinear)
+                            .style('fill', randomColor)
+                            .style('filter', `drop-shadow(0 0 6px ${randomColor})`)
+                            .style('opacity', randomOpacity)
+                            .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(${randomScale})`)
+                            .on('end', () => flicker(iterations - 1));
+                    }
+                    
+                    setTimeout(() => flicker(15 + Math.floor(Math.random() * 10)), i * 50);
+                });
+        }
+
+        function animateGravity() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Simular queda por gravidade
+                    const fallHeight = 200 + Math.random() * 150;
+                    const horizontalDrift = (Math.random() - 0.5) * 100; // Deriva lateral
+                    const fallY = baseY + fallHeight;
+                    const driftX = baseX + horizontalDrift;
+                    
+                    // Primeira fase: subir um pouco (como se fosse jogado para cima)
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 0.3)
+                        .delay(i * 100)
+                        .ease(d3.easeQuadOut)
+                        .attr('transform', `translate(${baseX + horizontalDrift * 0.3},${baseY - 30})rotate(${baseRotate + Math.random() * 180})scale(1.1)`)
+                        
+                        // Segunda fase: cair com aceleração
+                        .transition()
+                        .duration(config.animationSpeed * 1.2)
+                        .ease(d3.easeQuadIn) // Simula aceleração gravitacional
+                        .attr('transform', `translate(${driftX},${fallY})rotate(${baseRotate + 360 + Math.random() * 360})scale(0.7)`)
+                        .style('opacity', 0.4)
+                        
+                        // Terceira fase: "saltar" de volta à posição
+                        .transition()
+                        .duration(config.animationSpeed * 0.8)
+                        .ease(d3.easeBounceOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9);
+                });
+        }
+
+        // ========== NOVAS ANIMAÇÕES DE FONTE D3.js ==========
+
+        function animateFontGrowth() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const originalSize = parseFloat(element.style('font-size'));
+                    
+                    // Crescimento gradual do tamanho da fonte
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 150)
+                        .ease(d3.easeElastic.amplitude(1).period(0.4))
+                        .style('font-size', `${originalSize * 1.8}px`)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .transition()
+                        .duration(config.animationSpeed)
+                        .ease(d3.easeBackOut)
+                        .style('font-size', `${originalSize}px`);
+                });
+        }
+
+        function animateFontMorph() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            const fonts = ['Arial', 'Times', 'Courier', 'Impact', 'Georgia', 'Verdana', 'Helvetica'];
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    
+                    // Ciclo através de diferentes fontes
+                    let fontIndex = 0;
+                    function morphFont() {
+                        if (fontIndex >= fonts.length * 2) {
+                            element
+                                .transition()
+                                .duration(500)
+                                .style('font-family', currentFont);
+                            return;
+                        }
+                        
+                        const currentFontInCycle = fonts[fontIndex % fonts.length];
+                        element
+                            .transition()
+                            .duration(200)
+                            .style('font-family', currentFontInCycle)
+                            .style('opacity', 0.7 + Math.random() * 0.3)
+                            .on('end', () => {
+                                fontIndex++;
+                                morphFont();
+                            });
+                    }
+                    
+                    setTimeout(() => morphFont(), i * 100);
+                });
+        }
+
+        function animateWeightCycle() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            const weights = ['100', '300', 'normal', '600', 'bold', '800', '900'];
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    let weightIndex = 0;
+                    
+                    function cycleWeight() {
+                        if (weightIndex >= weights.length * 1.5) {
+                            element
+                                .transition()
+                                .duration(400)
+                                .style('font-weight', currentFontWeight);
+                            return;
+                        }
+                        
+                        const currentWeight = weights[weightIndex % weights.length];
+                        element
+                            .transition()
+                            .duration(300)
+                            .ease(d3.easeLinear)
+                            .style('font-weight', currentWeight)
+                            .style('filter', `drop-shadow(0 0 4px ${getWordColor(d.text)})`)
+                            .on('end', () => {
+                                weightIndex++;
+                                setTimeout(() => cycleWeight(), 100);
+                            });
+                    }
+                    
+                    setTimeout(() => cycleWeight(), i * 80);
+                });
+        }
+
+        function animateFontShake() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const originalSize = parseFloat(element.style('font-size'));
+                    
+                    // Tremor da fonte com mudanças de tamanho
+                    element
+                        .transition()
+                        .duration(3000)
+                        .ease(d3.easeLinear)
+                        .tween('shake', function() {
+                            return function(t) {
+                                const shakeX = Math.sin(t * 50 + i) * 3;
+                                const shakeY = Math.cos(t * 45 + i) * 2;
+                                const sizeVariation = originalSize + Math.sin(t * 30 + i) * 4;
+                                const rotateShake = baseRotate + Math.sin(t * 40 + i) * 3;
+                                
+                                element
+                                    .attr('transform', `translate(${baseX + shakeX},${baseY + shakeY})rotate(${rotateShake})scale(1)`)
+                                    .style('font-size', `${sizeVariation}px`)
+                                    .style('opacity', 0.7 + Math.sin(t * 20) * 0.3);
+                            };
+                        })
+                        .transition()
+                        .duration(500)
+                        .ease(d3.easeBack)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('font-size', `${originalSize}px`)
+                        .style('opacity', 0.9);
+                });
+        }
+
+        function animateRandomFonts() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            const fonts = ['Arial', 'Times New Roman', 'Courier New', 'Impact', 'Georgia', 
+                          'Verdana', 'Helvetica', 'Comic Sans MS', 'Trebuchet MS', 'Palatino'];
+            const weights = ['normal', 'bold', '300', '600', '800'];
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const originalSize = parseFloat(element.style('font-size'));
+                    
+                    // Mudanças aleatórias de fonte, peso e tamanho
+                    function randomizeFont(iterations) {
+                        if (iterations <= 0) {
+                            element
+                                .transition()
+                                .duration(600)
+                                .style('font-family', currentFont)
+                                .style('font-weight', currentFontWeight)
+                                .style('font-size', `${originalSize}px`)
+                                .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                            return;
+                        }
+                        
+                        const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+                        const randomWeight = weights[Math.floor(Math.random() * weights.length)];
+                        const randomSize = originalSize * (0.7 + Math.random() * 0.8);
+                        const randomScale = 0.8 + Math.random() * 0.4;
+                        
+                        element
+                            .transition()
+                            .duration(150 + Math.random() * 200)
+                            .style('font-family', randomFont)
+                            .style('font-weight', randomWeight)
+                            .style('font-size', `${randomSize}px`)
+                            .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(${randomScale})`)
+                            .on('end', () => randomizeFont(iterations - 1));
+                    }
+                    
+                    setTimeout(() => randomizeFont(12 + Math.floor(Math.random() * 8)), i * 100);
+                });
+        }
+
+        // ========== CONTROLES DE FONTE ==========
+
+        function setFont(fontName) {
+            currentFont = fontName;
+            setActiveFontButton(fontName);
+            
+            // Atualizar fontes existentes
+            if (svg && !svg.empty()) {
+                svg.selectAll('.word-text')
+                    .transition()
+                    .duration(600)
+                    .style('font-family', fontName);
+            }
+        }
+
+        function setActiveFontButton(fontName) {
+            // Remover classe active de todos os botões de fonte
+            d3.selectAll('[id^="font-"]').classed('active', false);
+            // Adicionar classe active ao botão selecionado
+            d3.select(`#font-${fontName.toLowerCase()}`).classed('active', true);
+        }
+
+        function setFontWeight(weight) {
+            currentFontWeight = weight;
+            setActiveWeightButton(weight);
+            
+            // Atualizar peso das fontes existentes
+            if (svg && !svg.empty()) {
+                svg.selectAll('.word-text')
+                    .transition()
+                    .duration(400)
+                    .style('font-weight', weight);
+            }
+        }
+
+        function setActiveWeightButton(weight) {
+            d3.selectAll('[id^="weight-"]').classed('active', false);
+            const buttonId = weight === '900' ? 'black' : weight === 'bold' ? 'bold' : 'normal';
+            d3.select(`#weight-${buttonId}`).classed('active', true);
+        }
+
+        function updateFontScale(value) {
+            fontScale = parseFloat(value);
+            const scaleElement = document.getElementById('font-scale-value');
+            if (scaleElement) {
+                scaleElement.textContent = value + 'x';
+            }
+            if (sankofaData) generateWordCloud();
+        }
+
+        // ========== TRANSFORMAÇÕES AVANÇADAS D3.js ==========
+
+        function animateMatrix3D() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Transformação de matriz 3D simulada
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 120)
+                        .ease(d3.easeCubicInOut)
+                        .tween('matrix3D', function() {
+                            return function(t) {
+                                // Simular rotação 3D com transformações 2D
+                                const rotX = Math.sin(t * Math.PI * 2) * 30;
+                                const rotY = Math.cos(t * Math.PI * 2) * 15;
+                                const scaleX = Math.cos(t * Math.PI) * 0.5 + 0.8;
+                                const scaleY = Math.abs(Math.sin(t * Math.PI)) * 0.3 + 0.9;
+                                const skewX = Math.sin(t * Math.PI * 4) * 10;
+                                
+                                element.attr('transform', 
+                                    `translate(${baseX + rotY},${baseY + rotX})` +
+                                    `rotate(${baseRotate + t * 360})` +
+                                    `scale(${scaleX},${scaleY})` +
+                                    `skewX(${skewX})`
+                                )
+                                .style('opacity', 0.4 + Math.abs(scaleX) * 0.6);
+                            };
+                        })
+                        .transition()
+                        .duration(800)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9);
+                });
+        }
+
+        function animateSkewTransform() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    // Transformação de inclinação (skew)
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 1.5)
+                        .delay(i * 100)
+                        .ease(d3.easeElasticOut.amplitude(1).period(0.3))
+                        .tween('skew', function() {
+                            return function(t) {
+                                const skewX = Math.sin(t * Math.PI * 3) * 25;
+                                const skewY = Math.cos(t * Math.PI * 2) * 15;
+                                const scaleX = 1 + Math.sin(t * Math.PI) * 0.4;
+                                const scaleY = 1 + Math.cos(t * Math.PI * 1.5) * 0.3;
+                                
+                                element.attr('transform', 
+                                    `translate(${baseX},${baseY})` +
+                                    `rotate(${baseRotate})` +
+                                    `scale(${scaleX},${scaleY})` +
+                                    `skewX(${skewX})` +
+                                    `skewY(${skewY})`
+                                );
+                            };
+                        })
+                        .transition()
+                        .duration(600)
+                        .ease(d3.easeBack)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animatePerspective() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const originalSize = parseFloat(element.style('font-size'));
+                    
+                    // Efeito de perspectiva
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2.5)
+                        .delay(i * 150)
+                        .ease(d3.easeBounceOut)
+                        .tween('perspective', function() {
+                            return function(t) {
+                                const depth = Math.sin(t * Math.PI) * 0.8;
+                                const scale = 0.3 + depth * 0.7;
+                                const offsetX = (1 - scale) * baseX * 0.3;
+                                const offsetY = (1 - scale) * baseY * 0.2;
+                                const blur = (1 - depth) * 3;
+                                
+                                element
+                                    .attr('transform', 
+                                        `translate(${baseX + offsetX},${baseY + offsetY})` +
+                                        `rotate(${baseRotate + t * 180})` +
+                                        `scale(${scale})`
+                                    )
+                                    .style('font-size', `${originalSize * scale}px`)
+                                    .style('opacity', 0.3 + depth * 0.6)
+                                    .style('filter', `blur(${blur}px)`);
+                            };
+                        })
+                        .transition()
+                        .duration(1000)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('font-size', `${originalSize}px`)
+                        .style('opacity', 0.9)
+                        .style('filter', 'none');
+                });
+        }
+
+        function animateClipPath() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            let defs = svg.select('defs');
+            if (defs.empty()) {
+                defs = svg.append('defs');
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    const clipId = `clip-${i}-${Date.now()}`;
+                    
+                    const clipPath = defs.append('clipPath').attr('id', clipId);
+                    const circle = clipPath.append('circle')
+                        .attr('cx', 0).attr('cy', 0).attr('r', 5);
+                    
+                    element.style('clip-path', `url(#${clipId})`);
+                    
+                    circle
+                        .transition()
+                        .duration(config.animationSpeed * 1.8)
+                        .delay(i * 100)
+                        .ease(d3.easeCircleOut)
+                        .attr('r', 80)
+                        .transition()
+                        .duration(600)
+                        .delay(1000)
+                        .ease(d3.easeBackIn)
+                        .attr('r', 5)
+                        .on('end', function() {
+                            setTimeout(() => {
+                                element.style('clip-path', 'none');
+                                defs.select(`#${clipId}`).remove();
+                            }, 500);
+                        });
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 1.8)
+                        .delay(i * 100)
+                        .ease(d3.easeCircleOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate + 180})scale(1.2)`)
+                        .transition()
+                        .duration(600)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateMorphPath() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    const morphShapes = ['circle', 'square', 'triangle', 'star', 'diamond'];
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 120)
+                        .ease(d3.easePolyInOut.exponent(3))
+                        .tween('morph', function() {
+                            return function(t) {
+                                const progress = t * morphShapes.length;
+                                const currentShape = Math.floor(progress) % morphShapes.length;
+                                const shapeProgress = progress - Math.floor(progress);
+                                
+                                let transform = `translate(${baseX},${baseY})rotate(${baseRotate})`;
+                                
+                                switch(morphShapes[currentShape]) {
+                                    case 'circle':
+                                        const circleScale = 1 + Math.sin(shapeProgress * Math.PI) * 0.3;
+                                        transform += `scale(${circleScale})`;
+                                        break;
+                                    case 'square':
+                                        const squareSkew = Math.sin(shapeProgress * Math.PI * 2) * 20;
+                                        transform += `scale(1.2,0.8)skewX(${squareSkew})`;
+                                        break;
+                                    case 'triangle':
+                                        const triScale = `${1 + shapeProgress * 0.5},${1 - shapeProgress * 0.3}`;
+                                        transform += `scale(${triScale})skewY(${shapeProgress * 15})`;
+                                        break;
+                                    case 'star':
+                                        const starRotate = baseRotate + shapeProgress * 72;
+                                        transform = `translate(${baseX},${baseY})rotate(${starRotate})scale(${1 + shapeProgress * 0.4})`;
+                                        break;
+                                    case 'diamond':
+                                        const diamondSkew = `skewX(${shapeProgress * 30})skewY(${shapeProgress * -15})`;
+                                        transform += `scale(0.8,1.3)${diamondSkew}`;
+                                        break;
+                                }
+                                
+                                element
+                                    .attr('transform', transform)
+                                    .style('opacity', 0.5 + Math.sin(t * Math.PI * 4) * 0.4);
+                            };
+                        })
+                        .transition()
+                        .duration(800)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9);
+                });
+        }
+
+        // Controles de configuração
+        function setColorScheme(scheme) {
+            currentColorScheme = scheme;
+            setActiveColorButton(scheme);
+            
+            // Atualizar cores existentes se SVG estiver disponível
+            if (svg && !svg.empty()) {
+                svg.selectAll('.word-text')
+                    .transition()
+                    .duration(600)
+                    .style('fill', d => getWordColor(d.text));
+            }
+        }
+
+        function setActiveColorButton(scheme) {
+            // Usar seleção D3 com verificação
+            const colorButtons = d3.selectAll('[id^="color-"]');
+            if (!colorButtons.empty()) {
+                colorButtons.classed('active', false);
+                const targetId = scheme === 'afrocentrica' ? 'afro' : scheme === 'natureza' ? 'natura' : 'sankofa';
+                d3.select(`#color-${targetId}`).classed('active', true);
+            }
+        }
+
+        function updateRotation(value) {
+            config.rotationRange = parseInt(value);
+            const rotationElement = document.getElementById('rotation-value');
+            if (rotationElement) {
+                rotationElement.textContent = value + '°';
+            }
+            if (sankofaData) generateWordCloud();
+        }
+
+        function updatePadding(value) {
+            config.padding = parseInt(value);
+            const paddingElement = document.getElementById('padding-value');
+            if (paddingElement) {
+                paddingElement.textContent = value + 'px';
+            }
+            if (sankofaData) generateWordCloud();
+        }
+
+        function updateAnimationSpeed(value) {
+            config.animationSpeed = parseInt(value);
+            const speedElement = document.getElementById('speed-value');
+            if (speedElement) {
+                speedElement.textContent = value + 'ms';
+            }
+        }
+
+        // Analytics
+        function updateAnalytics() {
+            analytics.sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000);
+            
+            // Atualizar elementos com verificação de existência
+            const wordCountEl = document.getElementById('word-count');
+            const interactionCountEl = document.getElementById('interaction-count');
+            const sessionTimeEl = document.getElementById('session-time');
+            const mostClickedEl = document.getElementById('most-clicked');
+            
+            if (wordCountEl) {
+                wordCountEl.textContent = sankofaData ? sankofaData.palavras.length : 0;
+            }
+            if (interactionCountEl) {
+                interactionCountEl.textContent = analytics.totalInteractions;
+            }
+            if (sessionTimeEl) {
+                sessionTimeEl.textContent = analytics.sessionTime + 's';
+            }
+            
+            // Palavra mais clicada
+            if (mostClickedEl) {
+                let mostClicked = '-';
+                if (analytics.wordClicks.size > 0) {
+                    const [word, count] = [...analytics.wordClicks.entries()].reduce((a, b) => a[1] > b[1] ? a : b);
+                    mostClicked = `${word} (${count}x)`;
+                }
+                mostClickedEl.textContent = mostClicked;
+            }
+        }
+
+        // Responsividade
+        function updateDimensions() {
+            const container = document.querySelector('.wordcloud-container');
+            if (!container) {
+                console.error('❌ Container não encontrado!');
+                return;
+            }
+            
+            const rect = container.getBoundingClientRect();
+            
+            config.width = Math.max(300, rect.width - 60);
+            config.height = Math.max(200, Math.min(600, window.innerHeight * 0.6));
+            
+            // Só atualizar SVG se ele existir
+            if (svg && !svg.empty()) {
+                svg.attr('viewBox', `0 0 ${config.width} ${config.height}`);
+            }
+            
+            // Só atualizar grupo de palavras se existir
+            if (wordsGroup) {
+                wordsGroup.attr('transform', `translate(${config.width/2},${config.height/2})`);
+            }
+        }
+
+        // Inicialização
+        window.addEventListener('load', () => {
+            console.log('📄 Página carregada');
+            updateDimensions();
+            init();
+        });
+
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(() => {
+                updateDimensions();
+                if (sankofaData) generateWordCloud();
+            }, 300);
+        });
+
+        // Verificação de dependências
+        setTimeout(() => {
+            if (typeof d3 === 'undefined') {
+                alert('❌ D3.js não carregou! Verifique sua conexão.');
+            } else if (!d3.layout?.cloud) {
+                alert('❌ D3-Cloud não carregou! Verifique sua conexão.');
+            } else {
+                console.log('✅ Todas as bibliotecas carregadas com sucesso!');
+            }
+        }, 1000);
+
+        // ========== ANIMAÇÕES FÍSICAS AVANÇADAS ==========
+
+        function animatePhysics() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    const mass = 1 + (d.size || 20) / 50;
+                    let velocityX = (Math.random() - 0.5) * 100 / mass;
+                    let velocityY = (Math.random() - 0.5) * 50 / mass;
+                    let posX = baseX;
+                    let posY = baseY;
+                    const gravity = 0.8;
+                    const friction = 0.98;
+                    const bounce = 0.7;
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 4)
+                        .delay(i * 80)
+                        .ease(d3.easeLinear)
+                        .tween('physics', function() {
+                            return function(t) {
+                                velocityY += gravity;
+                                posX += velocityX;
+                                posY += velocityY;
+                                
+                                if (posX > config.width/2 - 50 || posX < -config.width/2 + 50) {
+                                    velocityX *= -bounce;
+                                    posX = Math.max(-config.width/2 + 50, Math.min(config.width/2 - 50, posX));
+                                }
+                                
+                                if (posY > config.height/2 - 30) {
+                                    velocityY *= -bounce;
+                                    posY = config.height/2 - 30;
+                                }
+                                
+                                velocityX *= friction;
+                                velocityY *= friction;
+                                
+                                const rotationSpeed = (Math.abs(velocityX) + Math.abs(velocityY)) * 0.5;
+                                const currentRotation = baseRotate + t * rotationSpeed * 10;
+                                
+                                element.attr('transform', 
+                                    `translate(${posX},${posY})rotate(${currentRotation})scale(${1 + Math.abs(velocityY) * 0.01})`
+                                );
+                            };
+                        })
+                        .transition()
+                        .duration(1500)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`);
+                });
+        }
+
+        function animateParticles() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    const particleCount = 8 + Math.floor(Math.random() * 6);
+                    const particles = [];
+                    
+                    for (let p = 0; p < particleCount; p++) {
+                        const angle = (p / particleCount) * Math.PI * 2;
+                        const particle = wordsGroup.append('circle')
+                            .attr('cx', baseX)
+                            .attr('cy', baseY)
+                            .attr('r', 1 + Math.random() * 3)
+                            .style('fill', getWordColor(d.text))
+                            .style('opacity', 0);
+                        
+                        particles.push({
+                            element: particle, 
+                            angle: angle, 
+                            distance: 20 + Math.random() * 40,
+                            speed: 0.5 + Math.random() * 1
+                        });
+                    }
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 100)
+                        .ease(d3.easeCircleOut)
+                        .tween('particles', function() {
+                            return function(t) {
+                                particles.forEach((p, index) => {
+                                    const particleT = Math.max(0, t - index * 0.1);
+                                    const currentDistance = particleT * p.distance;
+                                    const currentAngle = p.angle + particleT * p.speed * Math.PI;
+                                    
+                                    const pX = baseX + Math.cos(currentAngle) * currentDistance;
+                                    const pY = baseY + Math.sin(currentAngle) * currentDistance;
+                                    
+                                    p.element
+                                        .attr('cx', pX)
+                                        .attr('cy', pY)
+                                        .style('opacity', Math.max(0, 0.8 - particleT));
+                                });
+                                
+                                const pulseScale = 1 + Math.sin(t * Math.PI * 3) * 0.1;
+                                element.attr('transform', 
+                                    `translate(${baseX},${baseY})rotate(${baseRotate})scale(${pulseScale})`
+                                );
+                            };
+                        })
+                        .on('end', function() {
+                            particles.forEach(p => p.element.remove());
+                        });
+                });
+        }
+
+        function animateFluid() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 3)
+                        .delay(i * 100)
+                        .ease(d3.easeSinInOut)
+                        .tween('fluid', function() {
+                            return function(t) {
+                                const wave1 = Math.sin(t * Math.PI * 4 + i * 0.5) * 15;
+                                const wave2 = Math.cos(t * Math.PI * 3 + i * 0.3) * 10;
+                                const wave3 = Math.sin(t * Math.PI * 6 + i * 0.8) * 5;
+                                
+                                const fluidX = baseX + wave1 + wave3;
+                                const fluidY = baseY + wave2;
+                                
+                                const scaleX = 1 + Math.sin(t * Math.PI * 5 + i) * 0.3;
+                                const scaleY = 1 + Math.cos(t * Math.PI * 4 + i) * 0.2;
+                                const skewX = Math.sin(t * Math.PI * 6 + i) * 15;
+                                const opacity = 0.4 + Math.sin(t * Math.PI * 2) * 0.4;
+                                
+                                element
+                                    .attr('transform', 
+                                        `translate(${fluidX},${fluidY})` +
+                                        `rotate(${baseRotate + wave3})` +
+                                        `scale(${scaleX},${scaleY})` +
+                                        `skewX(${skewX})`
+                                    )
+                                    .style('opacity', opacity)
+                                    .style('filter', `blur(${Math.abs(wave1) * 0.1}px)`);
+                            };
+                        })
+                        .transition()
+                        .duration(1000)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9)
+                        .style('filter', 'none');
+                });
+        }
+
+        function animateMagnetic() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            const magnetX = 0;
+            const magnetY = 0;
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2)
+                        .delay(i * 80)
+                        .ease(d3.easeExpInOut)
+                        .tween('magnetic', function() {
+                            return function(t) {
+                                const dx = magnetX - baseX;
+                                const dy = magnetY - baseY;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const force = Math.max(0.1, 1 - distance / 200);
+                                
+                                const attractT = Math.sin(t * Math.PI) * force;
+                                const currentX = baseX + dx * attractT * 0.3;
+                                const currentY = baseY + dy * attractT * 0.3;
+                                const magnetRotation = baseRotate + t * 360 * force;
+                                const scale = 1 + attractT * 0.5;
+                                const skewX = Math.sin(t * Math.PI * 3) * force * 20;
+                                
+                                element
+                                    .attr('transform', 
+                                        `translate(${currentX},${currentY})` +
+                                        `rotate(${magnetRotation})` +
+                                        `scale(${scale})` +
+                                        `skewX(${skewX})`
+                                    )
+                                    .style('opacity', 0.5 + force * 0.5)
+                                    .style('filter', `brightness(${1 + force * 0.5})`);
+                            };
+                        })
+                        .transition()
+                        .duration(1200)
+                        .ease(d3.easeElasticOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9)
+                        .style('filter', 'none');
+                });
+        }
+
+        function animateQuantum() {
+            if (!svg || svg.empty()) {
+                console.error('❌ SVG não inicializado!');
+                return;
+            }
+            
+            svg.selectAll('.word-text')
+                .each(function(d, i) {
+                    const element = d3.select(this);
+                    const baseX = d.finalX || d.x || 0;
+                    const baseY = d.finalY || d.y || 0;
+                    const baseRotate = d.finalRotate || d.rotate || 0;
+                    
+                    element
+                        .transition()
+                        .duration(config.animationSpeed * 2.5)
+                        .delay(i * 120)
+                        .ease(d3.easeLinear)
+                        .tween('quantum', function() {
+                            return function(t) {
+                                const states = 5;
+                                let totalX = 0, totalY = 0, totalOpacity = 0;
+                                
+                                for (let s = 0; s < states; s++) {
+                                    const statePhase = (t + s / states) * Math.PI * 2;
+                                    const stateX = baseX + Math.cos(statePhase + s) * 30;
+                                    const stateY = baseY + Math.sin(statePhase + s * 1.5) * 20;
+                                    const stateOpacity = Math.abs(Math.sin(statePhase)) / states;
+                                    
+                                    totalX += stateX * stateOpacity;
+                                    totalY += stateY * stateOpacity;
+                                    totalOpacity += stateOpacity;
+                                }
+                                
+                                const collapse = t > 0.7 ? Math.pow((t - 0.7) / 0.3, 3) : 0;
+                                const finalX = totalX * (1 - collapse) + baseX * collapse;
+                                const finalY = totalY * (1 - collapse) + baseY * collapse;
+                                const finalOpacity = totalOpacity * (1 - collapse) + 0.9 * collapse;
+                                const uncertainty = (1 - collapse) * 3;
+                                const quantumRotation = baseRotate + Math.sin(t * Math.PI * 8) * 15 * (1 - collapse);
+                                
+                                element
+                                    .attr('transform', 
+                                        `translate(${finalX},${finalY})` +
+                                        `rotate(${quantumRotation})` +
+                                        `scale(${1 + Math.sin(t * Math.PI * 6) * 0.1 * (1 - collapse)})`
+                                    )
+                                    .style('opacity', finalOpacity)
+                                    .style('filter', `blur(${uncertainty}px) brightness(${1 + (1 - collapse) * 0.5})`);
+                            };
+                        })
+                        .transition()
+                        .duration(800)
+                        .ease(d3.easeBackOut)
+                        .attr('transform', `translate(${baseX},${baseY})rotate(${baseRotate})scale(1)`)
+                        .style('opacity', 0.9)
+                        .style('filter', 'none');
+                });
+        }
+    </script>
+</body>
+</html>

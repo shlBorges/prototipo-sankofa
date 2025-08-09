@@ -444,7 +444,6 @@
   }
 </style>
 <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-<script src="js/cytoscape-sankofa.js"></script>
 </head>
 <body>
 
@@ -504,11 +503,148 @@
 </div>
 
 <script>
-  const cy = createCytoscape('cy', [cySankofaGroup.TECNOLOGIA, cySankofaGroup.EPISTEMICIDIO, cySankofaGroup.EDUCACAO]);
+  // Dados da rede
+  const nodesData = [
+    // Grupo 1: Epistemicídio e Estruturas de Opressão
+    { id: 'racializacao', label: 'Racialização', grupo: 'epistemicidio' },
+    { id: 'colonialidadeSaber', label: 'Colonialidade do Saber', grupo: 'epistemicidio' },
+    { id: 'branquitude', label: 'Branquitude', grupo: 'epistemicidio' },
+    { id: 'epistemicidio', label: 'Epistemicídio', grupo: 'epistemicidio', importance: 'high' },
+    
+    // Grupo 2: Tecnologia e Algoritmos
+    { id: 'tecnologia', label: 'Tecnologia', grupo: 'tecnologia' },
+    { id: 'ia', label: 'Inteligência Artificial', grupo: 'tecnologia' },
+    { id: 'racismoAlgoritmico', label: 'Racismo Algorítmico', grupo: 'tecnologia' },
+    { id: 'epistemicidioAlgoritmico', label: 'Epistemicídio Algorítmico', grupo: 'tecnologia', importance: 'high' },
+
+    // Grupo 3: Educação e Resistência
+    { id: 'reexistencia', label: 'Reexistência', grupo: 'educacao' },
+    { id: 'saberesNegros', label: 'Saberes Negros', grupo: 'educacao' },
+    { id: 'ept', label: 'Educação Profissional e Tecnológica', grupo: 'educacao', importance: 'high' }
+  ];
+
+  const edgesData = [
+    // Conexões dentro dos grupos
+    { source: 'epistemicidio', target: 'branquitude' },
+    { source: 'epistemicidio', target: 'colonialidadeSaber' },
+    { source: 'epistemicidio', target: 'racializacao' }, 
+
+    { source: 'epistemicidioAlgoritmico', target: 'tecnologia' },
+    { source: 'epistemicidioAlgoritmico', target: 'ia' },
+    { source: 'epistemicidioAlgoritmico', target: 'racismoAlgoritmico' },
+
+    { source: 'ept', target: 'reexistencia' },
+    { source: 'ept', target: 'saberesNegros' },
+
+    // Conexões entre os nós pais (grupos)
+    { source: 'epistemicidio', target: 'epistemicidioAlgoritmico' },
+    { source: 'epistemicidioAlgoritmico', target: 'ept' },
+  ];
+
+  const cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: [
+      ...nodesData.map(n => ({ 
+        data: { id: n.id, label: n.label, importance: n.importance, grupo: n.grupo },
+        classes: n.grupo // Adiciona a classe CSS baseada no grupo
+      })),
+      ...edgesData.map(e => ({ data: { source: e.source, target: e.target } })),
+    ],
+    style: [
+      { selector: 'node',
+        style: {
+          'background-color': '#666',
+          'label': 'data(label)',
+          'color': '#fff',
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'font-size': 12,
+          'width': 100,
+          'height': 100,
+          'text-wrap': 'wrap',
+          'text-max-width': 90
+        }
+      },
+      { selector: 'node.epistemicidio',
+        style: {
+          'background-color': '#8B0000',
+          'border-color': '#650000',
+          'border-width': 2
+        }
+      },
+      { selector: 'node.tecnologia',
+        style: {
+          'background-color': '#2E8B57',
+          'border-color': '#1F5F3F',
+          'border-width': 2
+        }
+      },
+      { selector: 'node.educacao',
+        style: {
+          'background-color': '#4682B4',
+          'border-color': '#2F4F4F',
+          'border-width': 2
+        }
+      },
+      { selector: 'node[importance = "high"]',
+        style: {
+          'width': 130,
+          'height': 130,
+          'font-size': 14,
+          'font-weight': 'bold',
+          'border-width': 3,
+          'border-color': '#8B0000',
+          'box-shadow': '0 0 20px rgba(220, 20, 60, 0.6)',
+          'text-wrap': 'wrap',
+          'text-max-width': 90,
+        }
+      },
+      { selector: 'edge',
+        style: {
+          'width': 2,
+          'line-color': '#ccc',
+          'curve-style': 'bezier'
+        }
+      },
+      { selector: '.highlighted',
+        style: {
+          'background-color': '#ff6600',
+          'line-color': '#ff6600',
+          'transition-duration': '0.5s'
+        }
+      },
+      { selector: '.hovered',
+        style: {
+          'width': 120,
+          'height': 120,
+          'border-width': 3,
+          'border-color': '#ff6600',
+          'transition-duration': '0.3s',
+          'z-index': 999
+        }
+      },
+      { selector: '.group-highlighted',
+        style: {
+          'border-width': 4,
+          'border-opacity': 1,
+          'transition-duration': '0.5s',
+          'z-index': 998
+        }
+      }
+    ],
+    layout: { 
+      name: 'cose', 
+      animate: true,
+      componentSpacing: 100,
+      nodeOverlap: 20,
+      idealEdgeLength: 100,
+      edgeElasticity: 100,
+      nestingFactor: 5
+    }
+  });
 
   let sankofaActive = false;
   let activeGroup = null; // Para controlar qual grupo está destacado
-  let clickedNode = null; // Para armazenar o nó específico clicado
   const sankofaPath = ['epistemicidio', 'epistemicidioAlgoritmico', 'ept'];
 
   // Configurações para Call-to-Action de cada trilha
@@ -516,25 +652,25 @@
     'sankofa': {
       title: 'Caminho Sankofa Revelado',
       question: 'Como podemos resgatar saberes ancestrais para resistir ao epistemicídio digital?',
-      page: 'pages/exploracao-trilha.html',
+      page: 'trilha.html',
       param: 'sankofa'
     },
     'epistemicidio': {
       title: 'Estruturas de Opressão',
       question: 'De que formas o epistemicídio se manifesta em sua experiência acadêmica?',
-      page: 'pages/exploracao-trilha.html',
+      page: 'trilha.html',
       param: 'epistemicidio'
     },
     'tecnologia': {
       title: 'Tecnologia e Algoritmos',
       question: 'Como os algoritmos reproduzem desigualdades em nosso dia a dia?',
-      page: 'pages/exploracao-trilha.html',
+      page: 'trilha.html',
       param: 'tecnologia'
     },
     'educacao': {
       title: 'Educação e Resistência',
       question: 'Que papel a educação tem na construção de uma sociedade mais justa?',
-      page: 'pages/exploracao-trilha.html',
+      page: 'trilha.html',
       param: 'educacao'
     }
   };
@@ -583,14 +719,10 @@
     document.getElementById('cta-title').textContent = config.title;
     document.getElementById('cta-question').textContent = config.question;
     
-   
-    // Configurar link de exploração com dados simplificados
+    // Configurar link de exploração
     const exploreBtn = document.getElementById('explore-btn');
- 
+    exploreBtn.href = `${config.page}?trilha=${config.param}`;
     
-    const trilhaParam = encodeURIComponent(JSON.stringify(clickedNode));
-    exploreBtn.href = `${config.page}?trilha=${config.param}&noClicado=${trilhaParam}`;
-
     // Mostrar CTA com delay para não conflitar com animações
     setTimeout(() => {
       document.getElementById('cta-panel').classList.add('show');
@@ -789,14 +921,6 @@
       // Pegar o grupo do nó clicado
       const nodeData = node.data();
       const nodeGroup = nodeData.grupo;
-      
-      // Armazenar o nó específico que foi clicado
-      clickedNode = {
-        id: nodeData.id,
-        label: nodeData.label,
-      };
-      
-      console.log('Nó clicado:', clickedNode); // Debug
       
       if (nodeGroup) {
         // Destacar todo o grupo

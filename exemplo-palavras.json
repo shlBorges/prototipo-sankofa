@@ -1,0 +1,58 @@
+{
+  "palavras": [
+    {
+      "text": "Epistemicídio",
+      "size": 44,
+      "description": "Eliminação sistemática dos saberes de grupos subalternizados",
+      "trail": "Epistemicídio Negro"
+    },
+    {
+      "text": "Colonialidade do Saber",
+      "size": 36,
+      "description": "Padrão de poder colonial que hierarquiza conhecimentos",
+      "trail": "Colonialidade do Saber"
+    },
+    {
+      "text": "Branquitude",
+      "size": 40,
+      "description": "Sistema de privilégios baseado na identidade racial branca",
+      "trail": "Branquitude"
+    },
+    {
+      "text": "Tecnologia e Poder",
+      "size": 35,
+      "description": "Relação entre desenvolvimento tecnológico e estruturas de poder",
+      "trail": "Tecnologia e Poder"
+    },
+    {
+      "text": "Racismo Algorítmico",
+      "size": 38,
+      "description": "Discriminação racial incorporada em sistemas automatizados",
+      "trail": "Racismo Algorítmico"
+    },
+    {
+      "text": "Inteligência Artificial",
+      "size": 33,
+      "description": "Sistemas computacionais que simulam inteligência humana",
+      "trail": "Inteligência Artificial"
+    },
+    {
+      "text": "Saberes Negros",
+      "size": 39,
+      "description": "Conhecimentos e epistemologias da população negra",
+      "trail": "Saberes Negros"
+    },
+    {
+      "text": "Reexistência",
+      "size": 32,
+      "description": "Estratégias de resistência e criação de novas formas de existir",
+      "trail": "Reexistência"
+    },
+    {
+      "text": "EPT",
+      "size": 28,
+      "description": "Educação Profissional e Tecnológica",
+      "trail": "EPT"
+    }
+  ]
+}

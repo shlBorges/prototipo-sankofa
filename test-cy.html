@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Protótipo Sankofa</title>
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; }
+  #cy { width: 100vw; height: 100vh; display: block; }
+  #sankofa-btn {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: #ff6600;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 999;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+  #sankofa-btn:hover { background: #e55a00; }
+</style>
+<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+</head>
+<body>
+
+<div id="cy"></div>
+<div id="sankofa-btn">Sankofa</div>
+
+<script>
+  // Dados da rede
+  const nodesData = [
+    { id: 'epistemicidio', label: 'Epistemicídio' },
+    { id: 'colonialidade', label: 'Colonialidade do Saber' },
+    { id: 'branquitude', label: 'Branquitude' },
+    { id: 'tecPoder', label: 'Tecnologia e Poder' },
+    { id: 'racismo', label: 'Racismo Algorítmico' },
+    { id: 'ia', label: 'Inteligência Artificial' },
+    { id: 'saberes', label: 'Saberes Negros' },
+    { id: 'reexistencia', label: 'Reexistência' },
+    { id: 'ept', label: 'Educação Profissional e Tecnológica' }
+  ];
+
+  const edgesData = [
+    { source: 'epistemicidio', target: 'colonialidade' },
+    { source: 'epistemicidio', target: 'branquitude' },
+    { source: 'epistemicidio', target: 'racismo' },
+    { source: 'colonialidade', target: 'tecPoder' },
+    { source: 'racismo', target: 'ia' },
+    { source: 'saberes', target: 'reexistencia' },
+    { source: 'reexistencia', target: 'ept' },
+    { source: 'branquitude', target: 'saberes' },
+    { source: 'tecPoder', target: 'ia' },
+    { source: 'ia', target: 'ept' }
+  ];
+
+  const cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: [
+      ...nodesData.map(n => ({ data: { id: n.id, label: n.label } })),
+      ...edgesData.map(e => ({ data: { source: e.source, target: e.target } }))
+    ],
+    style: [
+      { selector: 'node',
+        style: {
+          'background-color': '#666',
+          'label': 'data(label)',
+          'color': '#fff',
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'font-size': 12,
+          'width': 60,
+          'height': 60
+        }
+      },
+      { selector: 'edge',
+        style: {
+          'width': 2,
+          'line-color': '#ccc',
+          'target-arrow-shape': 'triangle',
+          'target-arrow-color': '#ccc',
+          'curve-style': 'bezier'
+        }
+      },
+      { selector: '.highlighted',
+        style: {
+          'background-color': '#ff6600',
+          'line-color': '#ff6600',
+          'target-arrow-color': '#ff6600',
+          'transition-duration': '0.5s'
+        }
+      }
+    ],
+    layout: { name: 'cose', animate: true }
+  });
+
+  let sankofaActive = false;
+  const sankofaPath = ['saberes', 'reexistencia', 'ept', 'tecPoder'];
+
+  document.getElementById('sankofa-btn').addEventListener('click', () => {
+    if (!sankofaActive) {
+      // Ativar destaque
+      cy.elements().removeClass('highlighted');
+      sankofaPath.forEach(id => cy.getElementById(id).addClass('highlighted'));
+      for (let i = 0; i < sankofaPath.length - 1; i++) {
+        cy.getElementById(sankofaPath[i]).edgesTo(cy.getElementById(sankofaPath[i+1])).addClass('highlighted');
+      }
+      cy.animate({
+        fit: { eles: cy.elements('.highlighted'), padding: 50 },
+        duration: 1000
+      });
+      sankofaActive = true;
+    } else {
+      // Resetar
+      cy.elements().removeClass('highlighted');
+      cy.animate({
+        fit: { eles: cy.elements(), padding: 50 },
+        duration: 1000
+      });
+      sankofaActive = false;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exploração de Trilha</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="../js/cytoscape-sankofa.js"></script>
+    <script src="../js/exploracao-trilha.js"></script>
+    <link rel="stylesheet" href="../style/style.css">
+    <link rel="stylesheet" href="../style/exploracao-trilha.css">
+
+</head>
+
+<body>
+    <!-- Header com trilha minimizável -->
+    <div class="trilha_header">
+        <header>Explorar trilha XPTO</header>
+        
+        <!-- Botão discreto para mostrar trilha quando escondida -->
+        <button class="btn-show-trilha" id="btnShowTrilha" style="display: none;">
+            <span class="show-icon">🗺️</span>
+            <span class="show-text">Trilha</span>
+        </button>
+
+        <!-- Painel suspenso da trilha -->
+        <div class="trilha-panel small" id="trilhaPanel">
+            <div class="trilha-container" id="trilhaContainer">
+                <div class="trilha-controls">
+                    <span class="trilha-title">Trilha de Conhecimento</span>
+                    <div class="control-buttons">
+                        <button class="btn-control" id="btnEsconder" title="Esconder trilha">
+                            <span class="btn-icon">✖️</span>
+                            <span class="btn-text">Esconder</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="mini-trilha-cytoscape"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área principal de conteúdo -->
+    <main class="main-content" id="mainContent">
+        <div class="content-placeholder">
+            <h1>Conteúdo Principal</h1>
+            <p>Esta é a área onde o conteúdo de leitura será exibido. A trilha acima pode ser minimizada para dar mais
+                espaço a esta seção.</p>
+            <p>Quando maximizada, a trilha permite ao usuário navegar entre os diferentes nós do conhecimento.</p>
+        </div>
+    </main>
+</body>
+
+</html>

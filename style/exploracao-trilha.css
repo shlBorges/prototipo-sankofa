@@ -1,0 +1,482 @@
+     /* Container da mini trilha */
+    .trilha_header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        height: 70px;
+    }
+
+    .trilha_header header {
+        flex: 1;
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    /* Botão discreto para mostrar trilha */
+    .btn-show-trilha {
+        background: var(--primary-color, #702c05);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        opacity: 0.8;
+    }
+
+    .btn-show-trilha:hover {
+        opacity: 1;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(112, 44, 5, 0.3);
+    }
+
+    .btn-show-trilha .show-icon {
+        font-size: 14px;
+    }
+
+    /* Painel suspenso - Estados */
+    .trilha-panel {
+        position: fixed;
+        top: 0;
+        right: 20px;
+        width: 380px; /* Largura reduzida para visual mais vertical e elegante */
+        max-width: 28vw; /* Máximo também reduzido */
+        background: white;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid #ddd;
+        border-top: none;
+        z-index: 1100;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    /* Estados do painel - apenas para esconder */
+    .trilha-panel.small,
+    .trilha-panel.expanded {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* Estado escondido */
+    .trilha-panel.hidden {
+        transform: translateY(-100%);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .trilha-container {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+    
+        border-radius: 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+     .trilha-container.minimized {
+         height: 60px;
+         overflow: hidden;
+     }
+
+     .trilha-container.maximized {
+         height: 300px;
+     }
+
+     /* Barra de controle */
+     .trilha-controls {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         padding: 10px 15px;
+         background: #f8f9fa;
+         border-bottom: 1px solid #eee;
+         flex-shrink: 0;
+         min-height: 45px; /* Altura mínima para consistência */
+     }
+
+     .trilha-title {
+         font-size: 14px;
+         font-weight: 600;
+         color: #333;
+         flex: 1;
+         margin-right: 10px;
+     }
+
+     .control-buttons {
+         display: flex;
+         gap: 6px;
+     }
+
+     .btn-control {
+         background: white;
+         border: 1px solid #ddd;
+         border-radius: 6px;
+         padding: 6px 10px;
+         cursor: pointer;
+         font-size: 12px;
+         transition: all 0.2s ease;
+         display: flex;
+         align-items: center;
+         gap: 4px;
+         min-width: 70px;
+         justify-content: center;
+     }
+
+     .btn-control:hover {
+         background: #f0f0f0;
+         border-color: #999;
+         transform: translateY(-1px);
+     }
+
+     .btn-control.active {
+         background: var(--primary-color, #702c05);
+         color: white;
+         border-color: var(--primary-color, #702c05);
+     }
+
+     .btn-control .btn-icon {
+         font-size: 10px;
+     }
+
+     .btn-control .btn-text {
+         font-size: 11px;
+         font-weight: 500;
+     }
+
+     /* Estados específicos do botão toggle */
+     .btn-control.state-small {
+         background: var(--primary-color, #702c05);
+         color: white;
+         border-color: var(--primary-color, #702c05);
+     }
+
+     .btn-control.state-small:hover {
+         background: var(--primary-dark, #5a2304);
+         border-color: var(--primary-dark, #5a2304);
+     }
+
+     .btn-control.state-expanded {
+         background: var(--secondary-color, #daa520);
+         color: white;
+         border-color: var(--secondary-color, #daa520);
+     }
+
+     .btn-control.state-expanded:hover {
+         background: var(--secondary-dark, #b8860b);
+         border-color: var(--secondary-dark, #b8860b);
+     }
+
+     /* Container do cytoscape com diferentes alturas */
+     #mini-trilha-cytoscape {
+         width: 100%;
+         border: none;
+         background: #fafafa;
+         transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+         padding: 15px; /* Padding interno para evitar elementos grudados nas bordas */
+         box-sizing: border-box; /* Include padding na largura total */
+     }
+
+     /* Estados específicos do container Cytoscape - Desktop simplificado */
+     .trilha-panel.small #mini-trilha-cytoscape,
+     .trilha-panel.expanded #mini-trilha-cytoscape {
+         height: 400px; /* Tamanho único otimizado para desktop */
+         pointer-events: all;
+         opacity: 1;
+     }
+
+     .trilha-panel.hidden #mini-trilha-cytoscape {
+         height: 0px; /* Escondido */
+         pointer-events: none;
+     }
+
+     /* Área de conteúdo principal */
+     .main-content {
+         margin-top: 80px;
+         /* Altura do header fixo */
+         padding: 20px;
+         transition: margin-top 0.3s ease;
+     }
+
+     .main-content.maximized {
+         /* Mantém a mesma margem pois o painel é suspenso */
+         margin-top: 80px;
+     }
+
+     .content-placeholder {
+         background: white;
+         padding: 30px;
+         border-radius: 12px;
+         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+         min-height: 400px;
+     }
+
+     /* Responsividade */
+     @media (max-width: 768px) {
+         .trilha_header {
+             padding: 10px 15px;
+             height: 60px;
+         }
+
+         .trilha_header header {
+             font-size: 18px;
+         }
+
+         .btn-show-trilha {
+             padding: 6px 8px;
+             font-size: 10px;
+         }
+
+         /* Mobile: Drawer lateral */
+         .trilha-panel {
+             position: fixed;
+             top: 0;
+             right: 0;
+             left: auto;
+             width: calc(100vw - 40px);
+             max-width: 350px;
+             height: 100vh;
+             max-height: 100vh;
+             border-radius: 0;
+             border-left: 1px solid #ddd;
+             border-top: none;
+             border-right: none;
+             border-bottom: none;
+             transform: translateX(100%);
+             transition: transform 0.3s ease-out;
+             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+         }
+
+         .trilha-panel.small,
+         .trilha-panel.expanded {
+             transform: translateX(0);
+             opacity: 1;
+         }
+
+         .trilha-panel.hidden {
+             transform: translateX(100%);
+             opacity: 0;
+         }
+
+         /* Drawer em mobile usa tamanho fixo otimizado - sem toggle pequeno/expandido */
+         .trilha-panel.small #mini-trilha-cytoscape,
+         .trilha-panel.expanded #mini-trilha-cytoscape {
+             height: calc(100vh - 90px); /* Altura total menos controles */
+             padding: 12px; /* Padding específico para mobile */
+         }
+
+         .trilha-controls {
+             padding: 8px 12px;
+         }
+
+         .trilha-title {
+             font-size: 12px;
+         }
+
+         .btn-control {
+             padding: 4px 6px;
+             min-width: 50px;
+             gap: 2px;
+         }
+
+         .btn-control .btn-text {
+             font-size: 10px;
+         }
+
+         .btn-control .btn-icon {
+             font-size: 9px;
+         }
+
+         .main-content {
+             margin-top: 70px;
+         }
+
+         /* Overlay para mobile drawer */
+         .trilha-panel:not(.hidden)::before {
+             content: '';
+             position: fixed;
+             top: 0;
+             left: 0;
+             right: calc(100vw - 40px);
+             bottom: 0;
+             background: rgba(0, 0, 0, 0.4);
+             z-index: -1;
+         }
+     }
+
+     /* Responsividade para tablets */
+     @media (max-width: 1024px) and (min-width: 769px) {
+         /* Drawer lateral para tablets */
+         .trilha-panel {
+             position: fixed;
+             top: 0;
+             right: 0;
+             left: auto;
+             width: 380px;
+             max-width: 45vw;
+             height: 100vh;
+             max-height: 100vh;
+             border-radius: 0;
+             border-left: 1px solid #ddd;
+             border-top: none;
+             border-right: none;
+             border-bottom: none;
+             transform: translateX(100%);
+             transition: transform 0.3s ease-out;
+             box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+         }
+
+         .trilha-panel.small,
+         .trilha-panel.expanded {
+             transform: translateX(0);
+             opacity: 1;
+         }
+
+         .trilha-panel.hidden {
+             transform: translateX(100%);
+             opacity: 0;
+         }
+
+         /* Drawer em tablets usa tamanho fixo otimizado - sem toggle pequeno/expandido */
+         .trilha-panel.small #mini-trilha-cytoscape,
+         .trilha-panel.expanded #mini-trilha-cytoscape {
+             height: calc(100vh - 100px); /* Altura total menos controles */
+             padding: 15px; /* Padding específico para tablets */
+         }
+
+         .trilha-controls {
+             padding: 15px 20px;
+             border-bottom: 2px solid #eee;
+         }
+
+         .trilha-title {
+             font-size: 15px;
+         }
+
+         .btn-control {
+             padding: 10px 15px;
+             min-width: 80px;
+             gap: 6px;
+         }
+
+         .btn-control .btn-text {
+             font-size: 12px;
+         }
+
+         .btn-control .btn-icon {
+             font-size: 11px;
+         }
+
+         /* Overlay para drawer */
+         .trilha-panel:not(.hidden)::before {
+             content: '';
+             position: fixed;
+             top: 0;
+             left: 0;
+             right: 380px;
+             bottom: 0;
+             background: rgba(0, 0, 0, 0.3);
+             z-index: -1;
+         }
+     }
+
+     /* Responsividade para smartphones pequenos */
+     @media (max-width: 480px) {
+         .trilha_header {
+             padding: 8px 12px;
+             height: 55px;
+         }
+
+         .trilha_header header {
+             font-size: 16px;
+         }
+
+         /* Smartphones pequenos: Drawer lateral */
+         .trilha-panel {
+             position: fixed;
+             top: 0;
+             right: 0;
+             left: auto;
+             width: 85vw;
+             max-width: 300px;
+             height: 100vh;
+             max-height: 100vh;
+             border-radius: 0;
+             border-left: 1px solid #ddd;
+             border-top: none;
+             border-right: none;
+             border-bottom: none;
+             transform: translateX(100%);
+             transition: transform 0.3s ease-out;
+         }
+
+         .trilha-panel.small,
+         .trilha-panel.expanded {
+             transform: translateX(0);
+             opacity: 1;
+         }
+
+         .trilha-panel.hidden {
+             transform: translateX(100%);
+             opacity: 0;
+         }
+
+         /* Drawer em smartphones usa tamanho fixo otimizado - sem toggle pequeno/expandido */
+         .trilha-panel.small #mini-trilha-cytoscape,
+         .trilha-panel.expanded #mini-trilha-cytoscape {
+             height: calc(100vh - 80px); /* Altura total menos controles */
+             padding: 10px; /* Padding específico para smartphones pequenos */
+         }
+
+         .trilha-controls {
+             padding: 12px 15px;
+             border-bottom: 2px solid #eee;
+         }
+
+         .trilha-title {
+             font-size: 13px;
+         }
+
+         .btn-control {
+             padding: 6px 8px;
+             min-width: 55px;
+             gap: 3px;
+         }
+
+         .btn-control .btn-text {
+             font-size: 10px;
+         }
+
+         .btn-control .btn-icon {
+             font-size: 9px;
+         }
+
+         /* Overlay para drawer */
+         .trilha-panel:not(.hidden)::before {
+             content: '';
+             position: fixed;
+             top: 0;
+             left: 0;
+             right: 85vw;
+             bottom: 0;
+             background: rgba(0, 0, 0, 0.4);
+             z-index: -1;
+         }
+     }
