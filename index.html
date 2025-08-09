@@ -11,12 +11,13 @@
     top: 20px; right: 20px;
     background: #ff6600;
     color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
+    padding: 15px 20px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 16px;
     z-index: 999;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
   }
   #sankofa-btn:hover { background: #e55a00; }
   
@@ -95,14 +96,14 @@
   #sankofa-panel h2 {
     color: #ff6600;
     margin-bottom: 15px;
-    font-size: 22px;
+    font-size: 26px;
   }
   
   #sankofa-panel p {
     color: #333;
     line-height: 1.6;
     margin-bottom: 20px;
-    font-size: 15px;
+    font-size: 18px;
   }
   
   .panel-buttons {
@@ -114,12 +115,12 @@
   #tracar-caminho-btn {
     background: #ff6600;
     color: white;
-    padding: 12px 20px;
+    padding: 15px 25px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
     flex: 1;
   }
   
@@ -128,12 +129,12 @@
   #fechar-panel-btn {
     background: #ccc;
     color: #333;
-    padding: 12px 20px;
+    padding: 15px 25px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
   }
   
   #fechar-panel-btn:hover { background: #999; }
@@ -143,15 +144,15 @@
     position: absolute;
     background: #fff;
     color: #ff6600;
-    border: 2px solid #ff6600;
+    border: 3px solid #ff6600;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 16px;
     z-index: 1001;
     pointer-events: none;
     opacity: 0;
@@ -221,17 +222,67 @@
     }
   }
 
+  /* Media Queries específicas para Mobile */
+  @media screen and (max-width: 768px) {
+    #sankofa-btn {
+      padding: 18px 24px;
+      font-size: 18px;
+      top: 15px;
+      right: 15px;
+    }
+    
+    #sankofa-panel {
+      padding: 30px;
+    }
+    
+    #sankofa-panel h2 {
+      font-size: 28px;
+    }
+    
+    #sankofa-panel p {
+      font-size: 20px;
+    }
+    
+    #tracar-caminho-btn, #fechar-panel-btn {
+      padding: 18px 30px;
+      font-size: 18px;
+    }
+    
+    .sankofa-badge {
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+      border-width: 3px;
+    }
+    
+    #welcome-content h1 {
+      font-size: 32px;
+    }
+    
+    #welcome-content p {
+      font-size: 20px;
+    }
+    
+    .exploration-option h3 {
+      font-size: 22px;
+    }
+    
+    .exploration-option p {
+      font-size: 19px;
+    }
+  }
+
   #welcome-content h1 {
     color: #ff6600;
     margin-bottom: 20px;
-    font-size: 24px;
+    font-size: 28px;
   }
 
   #welcome-content p {
     color: #333;
     line-height: 1.6;
     margin-bottom: 15px;
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .exploration-option {
@@ -261,7 +312,7 @@
   .exploration-option h3 {
     color: #ff6600;
     margin: 0 0 10px 0;
-    font-size: 18px;
+    font-size: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -269,7 +320,7 @@
 
   .exploration-option p {
     margin: 0;
-    font-size: 15px;
+    font-size: 17px;
     color: #555;
     line-height: 1.5;
   }

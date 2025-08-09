@@ -123,11 +123,11 @@ function createCytoscape(containerId, nodes) {
           'color': '#fff',
           'text-valign': 'center',
           'text-halign': 'center',
-          'font-size': 12,
-          'width': 100,
-          'height': 100,
+          'font-size': 16,
+          'width': 140,
+          'height': 140,
           'text-wrap': 'wrap',
-          'text-max-width': 90
+          'text-max-width': 120
         }
       },
       { selector: 'node.epistemicidio',
@@ -153,21 +153,21 @@ function createCytoscape(containerId, nodes) {
       },
       { selector: 'node[importance = "high"]',
         style: {
-          'width': 130,
-          'height': 130,
-          'font-size': 14,
+          'width': 180,
+          'height': 180,
+          'font-size': 18,
           'font-weight': 'bold',
-          'border-width': 3,
+          'border-width': 4,
           'border-color': '#8B0000',
           'box-shadow': '0 0 20px rgba(220, 20, 60, 0.6)',
           'text-wrap': 'wrap',
-          'text-max-width': 90,
+          'text-max-width': 140,
         }
       },
       { selector: 'edge',
         style: {
-          'width': 2,
-          'line-color': '#ccc',
+          'width': 3,
+          'line-color': '#999',
           'curve-style': 'bezier'
         }
       },
@@ -180,9 +180,9 @@ function createCytoscape(containerId, nodes) {
       },
       { selector: '.hovered',
         style: {
-          'width': 120,
-          'height': 120,
-          'border-width': 3,
+          'width': 160,
+          'height': 160,
+          'border-width': 4,
           'border-color': '#ff6600',
           'transition-duration': '0.3s',
           'z-index': 999
